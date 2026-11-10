@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AlgoStep</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E6B5C'/%3E%3Crect x='5' y='13' width='6' height='6' rx='1.5' fill='%23fff' opacity='.7'/%3E%3Crect x='13' y='13' width='6' height='6' rx='1.5' fill='%23fff'/%3E%3Crect x='21' y='13' width='6' height='6' rx='1.5' fill='%23fff' opacity='.7'/%3E%3Cpath d='M16 23.5l-2.5 3h5z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232D5F8F'/%3E%3Crect x='5' y='13' width='6' height='6' rx='1.5' fill='%23fff' opacity='.7'/%3E%3Crect x='13' y='13' width='6' height='6' rx='1.5' fill='%23fff'/%3E%3Crect x='21' y='13' width='6' height='6' rx='1.5' fill='%23fff' opacity='.7'/%3E%3Cpath d='M16 23.5l-2.5 3h5z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#E9EEEC; --panel:#FFFFFF; --soft:#F3F6F5; --ink:#14211E; --muted:#56685F; --line:#C9D4D0; --line-soft:#DFE6E3;
-  --accent:#1E6B5C; --accent-ink:#FFFFFF; --accent-soft:#D8EBE5;
+  --paper:#E8EDF1; --panel:#FFFFFF; --soft:#F3F6F8; --ink:#13202C; --muted:#566778; --line:#C8D2DB; --line-soft:#DFE5EB;
+  --accent:#2D5F8F; --accent-ink:#FFFFFF; --accent-soft:#DCE8F4;
   --good:#1D7650; --good-bg:#DDF1E5; --bad:#AE3445; --bad-bg:#F7E4E7; --chg:#8E5C00; --chg-bg:#FAEED3;
-  --ptr:#2D5F8F; --ptr-bg:#DCE8F4; --mark:#D3E9E2; --mark-ink:#0D2B24; --prev:#EEF3F1;
+  --ptr:#7A4FA8; --ptr-bg:#EEE6F7; --mark:#CFE0F1; --mark-ink:#0F2B47; --prev:#EEF2F6;
   --sans:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
-  --hl-kw:#1E6B5C;--hl-str:#9A4A12;--hl-num:#2D5F8F;--hl-com:#7D8B88;--hl-fn:#7A4FA8;--hl-type:#24808F;--hl-op:#6A7884;
+  --hl-kw:#2D5F8F;--hl-str:#1D7650;--hl-num:#B0581C;--hl-com:#7D8B99;--hl-fn:#7A4FA8;--hl-type:#24808F;--hl-op:#6A7887;
   color-scheme:light;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
@@ -24,20 +24,20 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --paper:#0D1513; --panel:#141E1B; --soft:#1A2622; --ink:#E2EBE8; --muted:#93A6A0; --line:#2A3A35; --line-soft:#21302B;
-    --accent:#6CC9B4; --accent-ink:#0A1D18; --accent-soft:#1B3730;
+    --paper:#0E151C; --panel:#151F29; --soft:#1A2632; --ink:#E3E9EF; --muted:#94A3B3; --line:#2B3A49; --line-soft:#223040;
+    --accent:#7FB1E3; --accent-ink:#0B1A28; --accent-soft:#1E3247;
     --good:#63C493; --good-bg:#16352A; --bad:#F08394; --bad-bg:#3A1D24; --chg:#E7B65C; --chg-bg:#3A2D12;
-    --ptr:#7FB1E3; --ptr-bg:#1E3247; --mark:#1F4038; --mark-ink:#E5F6F1; --prev:#18241F;
-    --hl-kw:#6CC9B4;--hl-str:#E8A672;--hl-num:#7FB1E3;--hl-com:#728480;--hl-fn:#C3A6EE;--hl-type:#5FC3D2;--hl-op:#93A6A0;
+    --ptr:#B79AE6; --ptr-bg:#2C2342; --mark:#24486C; --mark-ink:#E8F2FC; --prev:#1C2733;
+    --hl-kw:#7FB1E3;--hl-str:#7FD1A4;--hl-num:#E89A62;--hl-com:#728194;--hl-fn:#C3A6EE;--hl-type:#5FC3D2;--hl-op:#94A3B3;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --paper:#0D1513; --panel:#141E1B; --soft:#1A2622; --ink:#E2EBE8; --muted:#93A6A0; --line:#2A3A35; --line-soft:#21302B;
-  --accent:#6CC9B4; --accent-ink:#0A1D18; --accent-soft:#1B3730;
+  --paper:#0E151C; --panel:#151F29; --soft:#1A2632; --ink:#E3E9EF; --muted:#94A3B3; --line:#2B3A49; --line-soft:#223040;
+  --accent:#7FB1E3; --accent-ink:#0B1A28; --accent-soft:#1E3247;
   --good:#63C493; --good-bg:#16352A; --bad:#F08394; --bad-bg:#3A1D24; --chg:#E7B65C; --chg-bg:#3A2D12;
-  --ptr:#7FB1E3; --ptr-bg:#1E3247; --mark:#1F4038; --mark-ink:#E5F6F1; --prev:#18241F;
-  --hl-kw:#6CC9B4;--hl-str:#E8A672;--hl-num:#7FB1E3;--hl-com:#728480;--hl-fn:#C3A6EE;--hl-type:#5FC3D2;--hl-op:#93A6A0;
+  --ptr:#B79AE6; --ptr-bg:#2C2342; --mark:#24486C; --mark-ink:#E8F2FC; --prev:#1C2733;
+  --hl-kw:#7FB1E3;--hl-str:#7FD1A4;--hl-num:#E89A62;--hl-com:#728194;--hl-fn:#C3A6EE;--hl-type:#5FC3D2;--hl-op:#94A3B3;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -102,9 +102,10 @@ select.btn{padding-right:8px;max-width:300px}
 .hl{position:absolute;inset:0;overflow:hidden;pointer-events:none;color:var(--ink)}
 .hl .ln{display:block;position:relative;min-width:max-content;margin-right:-16px;padding-right:16px}
 .hl .ln::before{content:attr(data-n);position:absolute;left:-46px;width:32px;text-align:right;color:var(--muted);opacity:.6;font-size:12px}
-.hl .ln.cur{background:var(--mark);box-shadow:inset 3px 0 0 var(--accent)}
-.hl .ln.cur::before{opacity:1;color:var(--accent);font-weight:600;content:"▶ " attr(data-n)}
-.hl .ln.prev{background:var(--prev)}
+.hl .ln.ran{background:var(--good-bg);box-shadow:inset 3px 0 0 var(--good)}
+.hl .ln.ran::before{opacity:1;color:var(--good);font-weight:600}
+.hl .ln.next{background:var(--prev)}
+.hl .ln.next::before{opacity:1;color:var(--muted);content:"▶ " attr(data-n)}
 .hl .ln.err{background:var(--bad-bg);box-shadow:inset 3px 0 0 var(--bad)}
 .hl .ln.err::before{opacity:1;color:var(--bad);font-weight:600}
 .hl .ln{margin-left:-54px;padding-left:54px}
@@ -237,7 +238,8 @@ select.btn{padding-right:8px;max-width:300px}
 .legend .l1 i{background:var(--chg-bg);border-color:var(--chg)}
 .legend .l2 i{background:var(--good-bg);border-color:var(--good)}
 .legend .l3 i{background:var(--ptr-bg);border-color:var(--ptr)}
-.legend .l4 i{background:var(--mark);border-color:var(--accent)}
+.legend .l4 i{background:var(--good-bg);border-color:var(--good)}
+.legend .l5 i{background:var(--prev);border-color:var(--muted)}
 
 @media (prefers-reduced-motion: reduce){ .chg{animation:none} .status.loading::before{animation:none} }
 @media (max-width:980px){
@@ -317,7 +319,7 @@ select.btn{padding-right:8px;max-width:300px}
           <ul class="notes" id="stNotes"></ul>
         </div>
         <div class="state" id="state"></div>
-        <div class="legend"><span class="l4"><i></i>Next line to run</span><span class="l1"><i></i>Changed by the last line</span><span class="l2"><i></i>Added</span><span class="l3"><i></i>Index pointer</span></div>
+        <div class="legend"><span class="l4"><i></i>Line that just ran</span><span class="l5"><i></i>Next line</span><span class="l1"><i></i>Changed by the last line</span><span class="l2"><i></i>Added</span><span class="l3"><i></i>Index pointer</span></div>
       </div>
     </div>
   </section>
@@ -1127,12 +1129,13 @@ function notesFor(s){
     for(const [k, v] of Object.entries(va)) diffVal(k, vb[k], v, ch);
     out.push(...ch.slice(0, 8));
     if(ch.length > 8) out.push(['chg', `…and ${ch.length - 8} more changes`]);
-    if(!ch.length && s.base.ev === 'line' && s.ev === 'line') out.push(['', `Line ${s.base.line} ran without changing any variable.`]);
+    if(!ch.length && s.base.ev === 'line' && s.ev === 'line' && s.base.cond == null) out.push(['', `Line ${s.base.line} ran without changing any variable.`]);
   }
-  if(s.cond != null){
-    const kw = (runLines[s.line - 1] || '').trim().split(/\s/)[0];
-    const what = kw === 'while' ? (s.cv ? 'the loop body runs' : 'the loop ends') : (s.cv ? 'its block runs' : 'its block is skipped');
-    out.push([s.cv ? 'c-true' : 'c-false', `Condition ${C(s.cond)} is <span class="tf ${s.cv ? 't' : 'f'}">${s.cv ? 'True' : 'False'}</span>, so ${what}.`]);
+  const cs = s.base && s.base.ev === 'line' && s.ev !== 'error' ? s.base : null;
+  if(cs && cs.cond != null){
+    const kw = (runLines[cs.line - 1] || '').trim().split(/\s/)[0];
+    const what = kw === 'while' ? (cs.cv ? 'the loop body runs' : 'the loop ends') : (cs.cv ? 'its block runs' : 'its block is skipped');
+    out.push([cs.cv ? 'c-true' : 'c-false', `Condition ${C(cs.cond)} was <span class="tf ${cs.cv ? 't' : 'f'}">${cs.cv ? 'True' : 'False'}</span>, so ${what}.`]);
   }
   if(s.ev === 'return') out.push(['ret', `${C(s.fn + '()')} returns ${C(short(pr(s.ret)))} to its caller.`]);
   if(s.ev === 'done' && s.pass === true) out.push(['c-true', `Matches the expected output ${C(short(pr(s.expected), 80))}.`]);
@@ -1276,12 +1279,14 @@ function show(i){
   const s = steps[cur];
   $('#scrub').value = String(cur);
   $('#stepOf').textContent = `${entry && cases.length > 1 ? `Case ${caseIdx + 1} · ` : ''}Step ${cur + 1} of ${steps.length}`;
-  const lineText = s.line ? (runLines[s.line - 1] || '').trim() : '';
+  const r = ranLine(s);
+  const lineText = ((s.ev === 'line' && r ? runLines[r - 1] : s.line ? runLines[s.line - 1] : '') || '').trim();
   const t = $('#stTitle');
   t.className = s.ev === 'error' || s.ev === 'limit' ? 'bad' : '';
   t.textContent = s.ev === 'done' ? 'Done' : s.ev === 'limit' ? 'Step limit reached' : s.ev === 'error' ? (s.msg.trim().split('\n').pop().split(':')[0] || 'Error') : s.ev === 'return' ? `${s.fn}() returns ${short(pr(s.ret), 60)}` : lineText;
   let meta = '';
-  if(s.ev === 'line') meta = `Line ${s.line} · about to run${s.hit > 1 ? ` · run ${s.hit} of this line` : ''}`;
+  if(s.ev === 'line' && r) meta = `Ran line ${r}${s.base.hit > 1 ? ` (time ${s.base.hit})` : ''} · next: line ${s.line}`;
+  else if(s.ev === 'line') meta = `Line ${s.line} · about to run`;
   else if(s.ev === 'return') meta = `Line ${s.line} · leaving ${s.fn}()`;
   else if(s.ev === 'error') meta = s.line ? `Raised on line ${s.line}` : 'Raised before any line ran';
   meta += `${meta ? ' · ' : ''}${s.lines.toLocaleString('en')} line${s.lines === 1 ? '' : 's'} executed so far`;
@@ -1325,14 +1330,20 @@ function tokens(t){
   if(last < t.length) out.push(['', t.slice(last)]);
   return out;
 }
+/* the line whose effects this step shows: the previous line in the same frame, or the return line */
+function ranLine(s){
+  if(s.ev === 'return' || s.ev === 'done') return s.line || null;
+  return s.base && s.base.ev === 'line' ? s.base.line : null;
+}
 function paintCode(follow){
   const deco = {};
   const s = steps[cur];
   if(s && !stale && s.line){
     if(s.ev === 'error' || s.ev === 'limit') deco[s.line] = 'err';
     else{
-      deco[s.line] = 'cur';
-      if(s.base && s.base.ev === 'line' && s.base.line !== s.line) deco[s.base.line] = 'prev';
+      const r = ranLine(s);
+      if(s.ev === 'line') deco[s.line] = 'next';
+      if(r) deco[r] = deco[r] ? 'ran next' : 'ran';
     }
   }
   const lines = [[]];
