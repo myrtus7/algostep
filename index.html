@@ -119,15 +119,44 @@ select.btn{padding-right:8px;max-width:300px}
 .foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px 12px 16px;border-top:1px solid var(--line-soft)}
 .foot .spacer{flex:1}
 .hint{color:var(--muted);font-size:13px}
-.callrow{display:flex;align-items:center;gap:10px;padding:10px 12px 0 16px;border-top:1px solid var(--line-soft)}
-.callrow label{font-size:13px;color:var(--muted);white-space:nowrap}
 .problem.free{grid-template-columns:1fr}
 .problem.free .desc{border-right:0}
-.callrow.stdin{align-items:flex-start}
-.callrow.stdin label{padding-top:7px}
-.callrow textarea{flex:1;min-width:0;min-height:68px;resize:vertical;border:1px solid var(--line);background:var(--soft);border-radius:7px;padding:6px 10px;font:13px/1.5 var(--mono);white-space:pre;overflow:auto}
-.callrow textarea:focus-visible{outline:2px solid var(--accent);outline-offset:0}
-.callrow input{flex:1;min-width:0;border:1px solid var(--line);background:var(--soft);border-radius:7px;padding:6px 10px;font:13px/1.4 var(--mono)}
+.tests{border-top:1px solid var(--line-soft);padding:10px 12px 6px 16px;display:grid;gap:8px}
+.tests-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tests-title{font:600 12px/1 var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ctabs{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.ctab{display:inline-flex;align-items:center;border:1px solid transparent;border-radius:7px;font-size:13.5px}
+.ctab.on{background:var(--soft);border-color:var(--line)}
+.ctab button{border:0;background:transparent;cursor:pointer;padding:4px 9px;color:var(--muted);display:inline-flex;align-items:center}
+.ctab.on button{color:var(--ink);font-weight:600}
+.ctab button.x{padding:4px 8px 4px 0;opacity:0;font-weight:400}
+.ctab:hover button.x,.ctab.on button.x{opacity:.6}
+.ctab button.x:hover{color:var(--bad);opacity:1}
+.badge{width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--line)}
+.badge.ran{background:var(--muted)}.badge.ok{background:var(--good)}.badge.ko{background:var(--bad)}
+.cadd{border:1px dashed var(--line);background:transparent;border-radius:7px;width:28px;height:28px;cursor:pointer;color:var(--muted);font-size:16px;line-height:1}
+.cadd:hover{border-color:var(--accent);color:var(--ink)}
+.fields{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center}
+.fields label{font:13px/1.2 var(--mono);color:var(--muted);white-space:nowrap}
+.fields label.exp{font-family:var(--sans)}
+.fields input{min-width:0;width:100%;border:1px solid var(--line);background:var(--soft);border-radius:7px;padding:6px 10px;font:13px/1.4 var(--mono)}
+.fields .hint{grid-column:1/-1}
+.case-result{font-size:13px;display:flex;gap:4px 14px;flex-wrap:wrap;align-items:baseline;color:var(--muted)}
+.case-result code{color:var(--ink)}
+.verdict{font-weight:600}.verdict.ok{color:var(--good)}.verdict.ko{color:var(--bad)}
+.tree{overflow:auto;padding:2px 0 4px}
+.tree .tn{display:flex;flex-direction:column;align-items:center;position:relative;padding:0 3px}
+.tree .tv{min-width:38px;height:38px;padding:0 8px;border-radius:19px;border:1.5px solid var(--accent);background:var(--accent-soft);display:grid;place-items:center;font:500 13.5px/1 var(--mono);white-space:nowrap}
+.tree .tk{display:flex;align-items:flex-start;margin-top:12px;position:relative}
+.tree .tk::before{content:"";position:absolute;top:-12px;left:50%;height:12px;border-left:1.5px solid var(--line)}
+.tree .tk>.tn{padding-top:12px}
+.tree .tk>.tn::before{content:"";position:absolute;top:0;left:50%;height:12px;border-left:1.5px solid var(--line)}
+.tree .tk>.tn::after{content:"";position:absolute;top:0;width:50%;border-top:1.5px solid var(--line)}
+.tree .tk>.tn:first-child::after{left:50%}
+.tree .tk>.tn:last-child::after{right:50%}
+.tree .tn.empty{min-width:38px}
+.tree .tn.empty::before,.tree .tn.empty::after{display:none}
+.tree .ptrs{margin-top:2px}
 
 /* visualizer */
 .viz{min-height:420px}
@@ -249,8 +278,11 @@ select.btn{padding-right:8px;max-width:300px}
       </div>
       <div class="cx" id="cx"></div>
       <div class="editor"><pre class="hl" aria-hidden="true"></pre><textarea id="code" spellcheck="false" wrap="off" aria-label="Python code"></textarea></div>
-      <div class="callrow stdin" id="stdinRow" hidden><label for="stdin">Input</label><textarea id="stdin" spellcheck="false" wrap="off" aria-label="Standard input"></textarea></div>
-      <div class="callrow"><label for="call">Run</label><input id="call" spellcheck="false" autocomplete="off" aria-label="Call to trace"></div>
+      <div class="tests">
+        <div class="tests-head"><span class="tests-title">Testcases</span><div class="ctabs" id="caseTabs" role="tablist" aria-label="Test cases"></div></div>
+        <div class="fields" id="caseFields"></div>
+        <div class="case-result" id="caseResult" hidden></div>
+      </div>
       <div class="foot">
         <button class="btn primary" id="runBtn" type="button" disabled>Run and step through</button>
         <span class="hint">Ctrl + Enter</span>
@@ -292,7 +324,7 @@ select.btn{padding-right:8px;max-width:300px}
 </main>
 
 <script type="text/x-python" id="py-tracer">
-import sys, io, ast, json, types, traceback, collections, functools
+import sys, io, ast, json, types, traceback, collections, functools, inspect
 
 FN = '<algo>'
 LIM = 200
@@ -308,6 +340,30 @@ class ListNode:
     def __init__(self, val=0, next=None):
         self.val = val
         self.next = next
+
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def tree(values):
+    Node = globals()['TreeNode']
+    vals = list(values)
+    if not vals or vals[0] is None: return None
+    root = Node(vals[0])
+    q, i = collections.deque([root]), 1
+    while q and i < len(vals):
+        n = q.popleft()
+        if i < len(vals) and vals[i] is not None:
+            n.left = Node(vals[i])
+            q.append(n.left)
+        i += 1
+        if i < len(vals) and vals[i] is not None:
+            n.right = Node(vals[i])
+            q.append(n.right)
+        i += 1
+    return root
 
 def linked(values):
     Node = globals()['ListNode']
@@ -347,6 +403,15 @@ def _enc(v, depth=0, seen=frozenset()):
         return r
     d = getattr(v, '__dict__', None)
     if isinstance(d, dict):
+        if 'left' in d and 'right' in d and ('val' in d or 'value' in d):
+            budget = [63]
+            def walk(n):
+                if n is None: return None
+                if budget[0] <= 0: return {'more': True}
+                budget[0] -= 1
+                nd = getattr(n, '__dict__', {})
+                return {'v': _enc(nd.get('val', nd.get('value')), 5), 'id': id(n), 'l': walk(nd.get('left')), 'r': walk(nd.get('right'))}
+            return {'t': 'tree', 'cls': type(v).__name__, 'root': walk(v)}
         if 'next' in d and ('val' in d or 'value' in d):
             vals, ids, pos, cur, cyc = [], [], {}, v, None
             while cur is not None and len(vals) < 50:
@@ -381,15 +446,44 @@ def _conds(src):
 
 class _Stop(BaseException): pass
 
-def run(code, call, max_steps, stdin=''):
+def _plain(v, ann=''):
+    d = getattr(v, '__dict__', None)
+    if isinstance(d, dict) and 'left' in d and 'right' in d:
+        out, q = [], collections.deque([v])
+        while q and len(out) < 10000:
+            n = q.popleft()
+            if n is None:
+                out.append(None)
+                continue
+            out.append(n.val)
+            q.append(n.left)
+            q.append(n.right)
+        while out and out[-1] is None: out.pop()
+        return out
+    if isinstance(d, dict) and 'next' in d:
+        out, cur = [], v
+        while cur is not None and len(out) < 10000:
+            out.append(cur.val)
+            cur = cur.next
+        return out
+    if v is None and ('ListNode' in ann or 'TreeNode' in ann): return []
+    return v
+
+def _convert(v, ann, g):
+    if 'TreeNode' in ann and isinstance(v, list):
+        return [g['tree'](x) for x in v] if v and all(isinstance(x, list) for x in v) and 'List[' in ann else g['tree'](v)
+    if 'ListNode' in ann and isinstance(v, list):
+        return [g['linked'](x) for x in v] if v and all(isinstance(x, list) for x in v) and 'List[' in ann else g['linked'](v)
+    return v
+
+def run(code, entry, max_steps):
     steps = []
     out = io.StringIO()
     g = {'__name__': '__main__'}
     exec(PRELUDE, g)
     base = set(g) | {'__builtins__'}
     conds = _conds(code)
-    call = call.strip()
-    mode = 'call' if call else 'script'
+    entry = json.loads(entry) if entry else None
     state = {'final': None, 'exc': set()}
 
     def chain_of(frame):
@@ -447,28 +541,31 @@ def run(code, call, max_steps, stdin=''):
     def tracer(frame, event, arg):
         return local if frame.f_code.co_filename == FN else None
 
-    status, err, result, where = 'done', None, None, 'code'
+    status, err, result, where, ret_ann = 'done', None, None, None, ''
     old, old_in = sys.stdout, sys.stdin
-    sys.stdout, sys.stdin = out, io.StringIO(stdin)
+    sys.stdout, sys.stdin = out, io.StringIO('')
     try:
         compiled = compile(code, FN, 'exec')
-        if mode == 'call':
+        if entry:
             exec(compiled, g)
-            where = 'call'
-            tree = ast.parse(call, mode='eval')
-            ev = lambda node: eval(compile(ast.Expression(node), '<call>', 'eval'), g)
-            b = tree.body
-            if isinstance(b, ast.Call) and not any(isinstance(a, ast.Starred) for a in b.args) and all(k.arg for k in b.keywords):
-                f = ev(b.func)
-                args = [ev(a) for a in b.args]
-                kw = {k.arg: ev(k.value) for k in b.keywords}
-                thunk = lambda: f(*args, **kw)
-            else:
-                cc = compile(tree, '<call>', 'eval')
-                thunk = lambda: eval(cc, g)
+            where = 'the function lookup'
+            target = getattr(g[entry['cls']](), entry['fn']) if entry.get('cls') else g[entry['fn']]
+            try: sig = inspect.signature(target)
+            except (TypeError, ValueError): sig = None
+            if sig is not None and sig.return_annotation is not inspect.Signature.empty: ret_ann = str(sig.return_annotation)
+            ns = dict(g, null=None, true=True, false=False)
+            args = []
+            for name, expr in entry['args']:
+                where = 'the input ' + name
+                if not expr.strip(): raise ValueError('no value given')
+                v = eval(compile(expr.strip(), '<input>', 'eval'), ns)
+                p = sig.parameters.get(name) if sig is not None else None
+                if p is not None and p.annotation is not inspect.Parameter.empty: v = _convert(v, str(p.annotation), g)
+                args.append(v)
+            where = None
+            thunk = lambda: target(*args)
         else:
             thunk = lambda: exec(compiled, g)
-        where = 'code'
         sys.settrace(tracer)
         try:
             result = thunk()
@@ -484,30 +581,42 @@ def run(code, call, max_steps, stdin=''):
 
     if status == 'error':
         msg = ''.join(traceback.format_exception_only(type(err), err)).strip()
-        if isinstance(err, EOFError): msg += ' (the Input box has no more lines to read)'
         frames, tb = [], err.__traceback__
         while tb is not None:
             if tb.tb_frame.f_code.co_filename == FN: frames.append(tb)
             tb = tb.tb_next
         s = {'ev': 'error', 'msg': msg}
-        if frames:
+        if where:
+            if isinstance(err, SyntaxError): msg = 'SyntaxError: ' + str(err.msg)
+            s['msg'] = 'In ' + where + ': ' + msg
+            if where == 'the function lookup': s['msg'] = 'Could not find ' + ((entry.get('cls') or '') + '.' if entry.get('cls') else '') + entry['fn'] + '(): ' + msg
+        elif frames:
             last = frames[-1]
             s.update({'line': last.tb_lineno, 'fn': last.tb_frame.f_code.co_name, 'depth': len(frames),
                       'stack': [[t.tb_frame.f_code.co_name, t.tb_lineno] for t in frames], 'vars': vars_of(last.tb_frame)})
         elif isinstance(err, SyntaxError) and err.filename == FN:
             s['line'] = err.lineno
-        elif where == 'call':
-            s['msg'] = 'In the Run line: ' + msg
         if out.getvalue(): s['out'] = out.getvalue()[-5000:]
         steps.append(s)
     elif status == 'limit':
         steps.append({'ev': 'limit', 'max': max_steps})
     else:
         s = state['final'] or {'ev': 'done'}
+        s['ev'] = 'done'
         if out.getvalue(): s['out'] = out.getvalue()[-5000:]
-        if mode == 'call': s['ret'] = _enc(result)
+        if entry:
+            s['ret'] = _enc(result)
+            exp = (entry.get('expected') or '').strip()
+            if exp:
+                try:
+                    want = eval(compile(exp, '<expected>', 'eval'), dict(g, null=None, true=True, false=False))
+                    s['expected'] = _enc(want)
+                    s['pass'] = bool(_plain(result, ret_ann) == _plain(want))
+                except Exception as e:
+                    s['expErr'] = ''.join(traceback.format_exception_only(type(e), e)).strip()
         steps.append(s)
-    return json.dumps({'status': status, 'steps': steps})
+    last = steps[-1]
+    return json.dumps({'status': status, 'steps': steps, 'pass': last.get('pass'), 'ret': last.get('ret')})
 </script>
 
 <script type="module">
@@ -527,7 +636,7 @@ const PROBLEMS = [
     id: 'duplicate', title: 'Contains Duplicate', level: 'Easy',
     desc: ['Given an integer array <code>nums</code>, return <code>True</code> if some value appears at least twice, and <code>False</code> if every element is distinct.'],
     examples: [['nums = [1, 2, 3, 3]', 'True', '3 appears twice.'], ['nums = [1, 2, 3, 4]', 'False', 'All values are different.']],
-    call: 'Solution().hasDuplicate([1, 2, 3, 3])',
+    cases: [{ vals: { nums: '[1, 2, 3, 3]' }, exp: 'True' }, { vals: { nums: '[1, 2, 3, 4]' }, exp: 'False' }],
     solutions: [
       { id: 'brute', name: 'Brute force', time: 'O(n²)', space: 'O(1)', note: 'Compare every pair of positions.', code:
 `class Solution:
@@ -569,7 +678,7 @@ const PROBLEMS = [
     id: 'anagram', title: 'Valid Anagram', level: 'Easy',
     desc: ['Given two strings <code>s</code> and <code>t</code>, return <code>True</code> if they contain exactly the same characters with the same counts, in any order.'],
     examples: [['s = "racecar", t = "carrace"', 'True', ''], ['s = "jar", t = "jam"', 'False', '']],
-    call: 'Solution().isAnagram("racecar", "carrace")',
+    cases: [{ vals: { s: '"racecar"', t: '"carrace"' }, exp: 'True' }, { vals: { s: '"jar"', t: '"jam"' }, exp: 'False' }],
     solutions: [
       { id: 'sort', name: 'Sorting', time: 'O(n log n)', space: 'O(n)', note: 'Anagrams become identical once their characters are sorted.', code:
 `class Solution:
@@ -597,7 +706,7 @@ const PROBLEMS = [
     id: 'twosum', title: 'Two Sum', level: 'Easy',
     desc: ['Given an array <code>nums</code> and an integer <code>target</code>, return the indices <code>[i, j]</code> of the two numbers that add up to <code>target</code>, with <code>i &lt; j</code>. Exactly one answer exists.'],
     examples: [['nums = [3, 4, 5, 6], target = 7', '[0, 1]', '3 + 4 = 7'], ['nums = [5, 5], target = 10', '[0, 1]', '']],
-    call: 'Solution().twoSum([3, 4, 5, 6], 7)',
+    cases: [{ vals: { nums: '[3, 4, 5, 6]', target: '7' }, exp: '[0, 1]' }, { vals: { nums: '[5, 5]', target: '10' }, exp: '[0, 1]' }],
     solutions: [
       { id: 'brute', name: 'Brute force', time: 'O(n²)', space: 'O(1)', note: 'Try every pair.', code:
 `class Solution:
@@ -625,7 +734,7 @@ const PROBLEMS = [
     id: 'stock', title: 'Best Time to Buy and Sell Stock', level: 'Easy',
     desc: ['<code>prices[i]</code> is a stock’s price on day <code>i</code>. Choose one day to buy and a later day to sell. Return the maximum profit, or <code>0</code> if no profit is possible.'],
     examples: [['prices = [10, 1, 5, 6, 7, 1]', '6', 'Buy at 1, sell at 7.'], ['prices = [10, 8, 7, 5, 2]', '0', '']],
-    call: 'Solution().maxProfit([10, 1, 5, 6, 7, 1])',
+    cases: [{ vals: { prices: '[10, 1, 5, 6, 7, 1]' }, exp: '6' }, { vals: { prices: '[10, 8, 7, 5, 2]' }, exp: '0' }],
     solutions: [
       { id: 'brute', name: 'Brute force', time: 'O(n²)', space: 'O(1)', note: 'Try every buy day with every later sell day.', code:
 `class Solution:
@@ -657,7 +766,7 @@ const PROBLEMS = [
     id: 'parens', title: 'Valid Parentheses', level: 'Easy',
     desc: ['Given a string of brackets <code>()[]{}</code>, return <code>True</code> if every opening bracket is closed by the same type, in the right order.'],
     examples: [['s = "([{}])"', 'True', ''], ['s = "[(])"', 'False', 'The brackets interleave.']],
-    call: 'Solution().isValid("([{}])")',
+    cases: [{ vals: { s: '"([{}])"' }, exp: 'True' }, { vals: { s: '"[(])"' }, exp: 'False' }],
     solutions: [
       { id: 'stack', name: 'Stack', time: 'O(n)', space: 'O(n)', note: 'Push openers; each closer must match the top of the stack.', code:
 `class Solution:
@@ -680,7 +789,7 @@ const PROBLEMS = [
     id: 'bsearch', title: 'Binary Search', level: 'Easy',
     desc: ['Given a sorted array <code>nums</code> and a <code>target</code>, return the index of <code>target</code>, or <code>-1</code> if it is missing. The algorithm must run in O(log n).'],
     examples: [['nums = [-1, 0, 2, 4, 6, 8], target = 4', '3', ''], ['nums = [-1, 0, 2, 4, 6, 8], target = 3', '-1', '']],
-    call: 'Solution().search([-1, 0, 2, 4, 6, 8], 4)',
+    cases: [{ vals: { nums: '[-1, 0, 2, 4, 6, 8]', target: '4' }, exp: '3' }, { vals: { nums: '[-1, 0, 2, 4, 6, 8]', target: '3' }, exp: '-1' }],
     solutions: [
       { id: 'iter', name: 'Iterative', time: 'O(log n)', space: 'O(1)', note: 'Halve the search window [l, r] at each step.', code:
 `class Solution:
@@ -717,7 +826,7 @@ const PROBLEMS = [
     id: 'stairs', title: 'Climbing Stairs', level: 'Easy',
     desc: ['You climb a staircase of <code>n</code> steps, taking 1 or 2 steps at a time. How many distinct ways are there to reach the top?'],
     examples: [['n = 3', '3', '1+1+1, 1+2, 2+1'], ['n = 5', '8', '']],
-    call: 'Solution().climbStairs(5)',
+    cases: [{ vals: { n: '5' }, exp: '8' }, { vals: { n: '3' }, exp: '3' }],
     solutions: [
       { id: 'memo', name: 'Recursion + memo', time: 'O(n)', space: 'O(n)', note: 'ways(i) = ways(i+1) + ways(i+2), each value computed once and cached.', code:
 `class Solution:
@@ -749,9 +858,9 @@ const PROBLEMS = [
   },
   {
     id: 'reverse', title: 'Reverse Linked List', level: 'Easy',
-    desc: ['Given the head of a singly linked list, reverse the list and return its new head.', 'In the Run line, <code>linked([...])</code> builds a list of <code>ListNode</code> from a Python list.'],
+    desc: ['Given the head of a singly linked list, reverse the list and return its new head.', 'In test cases, write the list as <code>[0, 1, 2, 3]</code>: it becomes a <code>ListNode</code> chain because <code>head</code> is annotated <code>ListNode</code>.'],
     examples: [['head = 0 → 1 → 2 → 3', '3 → 2 → 1 → 0', ''], ['head = None', 'None', '']],
-    call: 'Solution().reverseList(linked([0, 1, 2, 3]))',
+    cases: [{ vals: { head: '[0, 1, 2, 3]' }, exp: '[3, 2, 1, 0]' }, { vals: { head: '[]' }, exp: '[]' }],
     solutions: [
       { id: 'iter', name: 'Iterative', time: 'O(n)', space: 'O(1)', note: 'Walk the list and point each node back at the previous one.', code:
 `class ListNode:
@@ -788,24 +897,56 @@ class Solution:
 ` },
     ],
   },
+  {
+    id: 'depth', title: 'Maximum Depth of Binary Tree', level: 'Easy',
+    desc: ['Given the root of a binary tree, return its depth: the number of nodes on the longest path from the root down to a leaf.', 'Trees are written in LeetCode’s level order, with <code>null</code> for a missing child.'],
+    examples: [['root = [1, 2, 3, null, null, 4]', '3', ''], ['root = []', '0', '']],
+    cases: [{ vals: { root: '[1, 2, 3, null, null, 4]' }, exp: '3' }, { vals: { root: '[]' }, exp: '0' }],
+    solutions: [
+      { id: 'dfs', name: 'Recursive DFS', time: 'O(n)', space: 'O(h)', note: 'The depth of a node is 1 + the deeper of its two subtrees.', code:
+`class Solution:
+    def maxDepth(self, root: Optional[TreeNode]) -> int:
+        if not root:
+            return 0
+        left = self.maxDepth(root.left)
+        right = self.maxDepth(root.right)
+        return 1 + max(left, right)
+` },
+      { id: 'bfs', name: 'BFS', time: 'O(n)', space: 'O(n)', note: 'Visit the tree level by level with a queue and count the levels.', code:
+`class Solution:
+    def maxDepth(self, root: Optional[TreeNode]) -> int:
+        q = deque()
+        if root:
+            q.append(root)
+        level = 0
+        while q:
+            for i in range(len(q)):
+                node = q.popleft()
+                if node.left:
+                    q.append(node.left)
+                if node.right:
+                    q.append(node.right)
+            level += 1
+        return level
+` },
+    ],
+  },
 ];
 
 const FREE = {
-  id: 'free', title: 'Free code', free: true,
-  desc: ['Write any Python and step through it. Read the <b>Input</b> box with <code>input()</code> or <code>sys.stdin</code>, one line per call.',
-    'Leave the <b>Run</b> line empty to trace the whole script, or write a call such as <code>solve([3, 1, 2])</code> to trace only that function.'],
-  examples: [], call: '',
-  stdin: '5\n3 1 4 1 5\n',
+  id: 'free', title: 'My code', free: true,
+  desc: ['Paste a LeetCode solution, add test cases, and step through it. The function to run is detected from the code: the public method of <code>class Solution</code>, or a top-level function.',
+    'Values use Python or LeetCode syntax (<code>null</code>, <code>true</code>, <code>false</code>). A list becomes a <code>ListNode</code> or <code>TreeNode</code> when the parameter is annotated that way. Paste a LeetCode example such as <code>nums = [1,2,3], k = 2</code> into a field to fill them all, or several lines to add several cases.'],
+  examples: [],
+  cases: [{ vals: { nums: '[-2,1,-3,4,-1,2,1,-5,4]' }, exp: '6' }, { vals: { nums: '[1]' }, exp: '1' }, { vals: { nums: '[5,4,-1,7,8]' }, exp: '23' }],
   solutions: [{ id: 'main', name: 'Your code', code:
-`# Write any Python here. input() reads the Input box line by line.
-n = int(input())
-nums = list(map(int, input().split()))
-
-best = nums[0]
-for i in range(1, n):
-    if nums[i] > best:
-        best = nums[i]
-print("max:", best)
+`class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        best = cur = nums[0]
+        for i in range(1, len(nums)):
+            cur = max(nums[i], cur + nums[i])
+            best = max(best, cur)
+        return best
 ` }],
 };
 const ALL = [FREE, ...PROBLEMS];
@@ -814,12 +955,13 @@ const ALL = [FREE, ...PROBLEMS];
 let py = null, pyRun = null, busy = false;
 let steps = [], cur = 0, runLines = [], stale = false, playTimer = null;
 let speed = Number(store.get('as.speed')) || 1;
-let prob = ALL.find(p => p.id === store.get('as.problem')) || PROBLEMS[0];
+let prob = ALL.find(p => p.id === store.get('as.problem')) || FREE;
+let cases = [], caseIdx = 0, traces = [], entry = null, entrySig = '';
 let sol = null;
 
-const codeEl = $('#code'), callEl = $('#call'), stdinEl = $('#stdin'), hlEl = $('.hl');
+const codeEl = $('#code'), hlEl = $('.hl');
 const setStatus = (kind, text) => { const el = $('#status'); el.className = 'status ' + kind; el.textContent = text; };
-const codeKey = () => `as.code.${prob.id}.${sol.id}`, callKey = () => `as.call.${prob.id}`;
+const codeKey = () => `as.code.${prob.id}.${sol.id}`, casesKey = () => `as.cases.${prob.id}`;
 
 /* ---------- python ---------- */
 async function boot(){
@@ -844,28 +986,46 @@ async function boot(){
 async function run(){
   if(!pyRun || busy) return;
   busy = true; stopPlay(); $('#runBtn').disabled = true;
-  const code = codeEl.value, call = callEl.value, stdin = prob.free ? stdinEl.value : '';
-  let res;
+  const code = codeEl.value;
+  refreshEntry();
+  const jobs = entry ? cases.map(c => JSON.stringify({ cls: entry.cls, fn: entry.fn, args: entry.params.map(p => [p, c.vals[p] ?? '']), expected: c.exp || '' })) : [''];
   await new Promise(r => setTimeout(r, 15));
-  try{ res = JSON.parse(pyRun(code, call, MAX_STEPS, stdin)); }
-  catch(e){ res = { status: 'error', steps: [{ ev: 'error', msg: String(e.message || e) }] }; }
+  traces = jobs.map(job => {
+    let res;
+    try{ res = JSON.parse(pyRun(code, job, MAX_STEPS)); }
+    catch(e){ res = { status: 'error', steps: [{ ev: 'error', msg: String(e.message || e) }] }; }
+    prepare(res.steps);
+    return res;
+  });
   runLines = code.split('\n');
-  steps = res.steps;
-  prepare();
   stale = false;
   busy = false; $('#runBtn').disabled = false;
-  const nl = steps.filter(s => s.ev === 'line').length;
-  $('#summary').textContent = res.status === 'limit' ? `stopped at ${MAX_STEPS.toLocaleString('en')} steps` : `${nl.toLocaleString('en')} line${nl === 1 ? '' : 's'} executed`;
   $('#vizEmpty').hidden = true; $('#stepWrap').hidden = false; $('#scrubRow').hidden = false; $('#stale').hidden = true;
+  if(entry && traces.length > 1){
+    const failed = traces.findIndex(t => t.status !== 'done' || t.pass === false);
+    if(failed >= 0 && traces[caseIdx].status === 'done' && traces[caseIdx].pass !== false) caseIdx = failed;
+  }
+  renderCaseTabs(); renderFields();
+  selectTrace();
+}
+
+/* load the trace of the selected test case into the player */
+function selectTrace(){
+  const t = traces[entry ? caseIdx : 0];
+  renderCaseResult();
+  if(!t || stale) return;
+  steps = t.steps;
+  const nl = steps.filter(s => s.ev === 'line').length;
+  $('#summary').textContent = t.status === 'limit' ? `stopped at ${MAX_STEPS.toLocaleString('en')} steps` : `${nl.toLocaleString('en')} line${nl === 1 ? '' : 's'} executed`;
   $('#scrub').max = String(steps.length - 1);
-  show(res.status === 'error' ? steps.length - 1 : 0);
+  show(t.status === 'error' ? steps.length - 1 : 0);
 }
 
 /* attach frame context, the comparison base and line hit counts to each step */
-function prepare(){
+function prepare(list){
   let last = null, lines = 0;
   const lastAt = {}, hits = {};
-  for(const s of steps){
+  for(const s of list){
     if(s.vars === undefined && last){ s.vars = last.vars; s.stack = last.stack; s.depth = last.depth; s.fn = last.fn; if(s.line == null) s.line = last.line; }
     s.vars = s.vars || {}; s.stack = s.stack || []; s.depth = s.depth || 0;
     s.enter = !last || (s.depth > last.depth && s.ev !== 'error');
@@ -894,6 +1054,7 @@ function pr(e){
     case 'deque': return 'deque([' + e.v.map(pr).join(', ') + more(e.n, e.v.length) + '])';
     case 'set': return e.n ? '{' + e.v.map(pr).join(', ') + more(e.n, e.v.length) + '}' : 'set()';
     case 'dict': return (e.cls ? e.cls + '(' : '') + '{' + e.v.map(([k, v]) => pr(k) + ': ' + pr(v)).join(', ') + more(e.n, e.v.length) + '}' + (e.cls ? ')' : '');
+    case 'tree': return e.root ? `${e.cls}(${e.root.more ? '…' : pr(e.root.v)})` : 'None';
     case 'chain': return e.v.map(pr).join(' → ') + (e.cycle != null ? ' ↺' : e.more ? ' → …' : ' → None');
     case 'obj': return e.cls + '(' + e.v.map(([k, v]) => k + '=' + pr(v)).join(', ') + ')';
     case 'more': return '…';
@@ -974,6 +1135,9 @@ function notesFor(s){
     out.push([s.cv ? 'c-true' : 'c-false', `Condition ${C(s.cond)} is <span class="tf ${s.cv ? 't' : 'f'}">${s.cv ? 'True' : 'False'}</span>, so ${what}.`]);
   }
   if(s.ev === 'return') out.push(['ret', `${C(s.fn + '()')} returns ${C(short(pr(s.ret)))} to its caller.`]);
+  if(s.ev === 'done' && s.pass === true) out.push(['c-true', `Matches the expected output ${C(short(pr(s.expected), 80))}.`]);
+  if(s.ev === 'done' && s.pass === false) out.push(['c-false', `Wrong answer: expected ${C(short(pr(s.expected), 80))}.`]);
+  if(s.ev === 'done' && s.expErr) out.push(['err', esc('Couldn’t read Expected: ' + s.expErr)]);
   if(s.ev === 'done') out.push(['ret', s.ret ? `Finished. The call returned ${C(short(pr(s.ret), 120))} after ${s.lines.toLocaleString('en')} executed lines.` : `Finished after ${s.lines.toLocaleString('en')} executed lines.`]);
   return out;
 }
@@ -1002,7 +1166,7 @@ function cellsHtml(items, baseItems, ptrs, opts = {}){
 
 function typeLabel(e){
   if(e.t === 'str') return `str · ${e.n}`;
-  if(e.t === 'chain') return e.cls;
+  if(e.t === 'chain' || e.t === 'tree') return e.cls;
   if(e.t === 'obj') return e.cls;
   if(e.t === 'dict') return `${e.cls || 'dict'} · ${e.n}`;
   return `${e.t} · ${e.n}`;
@@ -1057,6 +1221,16 @@ function varHtml(name, e, base, ptrs, labels){
     h += e.cycle != null ? `<span class="nil">back to node ${e.cycle}</span>` : e.more ? '<span class="nil">…</span>' : '<span class="nil">None</span>';
     return `<div class="var">${head}${h}</div></div>`;
   }
+  if(e.t === 'tree'){
+    const node = n => {
+      if(!n) return '<div class="tn empty"></div>';
+      if(n.more) return '<div class="tn"><div class="tv">…</div></div>';
+      const lb = (labels.byId[n.id] || []).filter(x => x !== labels.self);
+      const kids = n.l || n.r ? `<div class="tk">${node(n.l)}${node(n.r)}</div>` : '';
+      return `<div class="tn"><div class="tv${changed}">${esc(short(pr(n.v), 14))}</div>${lb.length ? `<span class="ptrs">${lb.map(p => `<i>${esc(p)}</i>`).join('')}</span>` : ''}${kids}</div>`;
+    };
+    return `<div class="var">${head}<div class="tree">${node(e.root)}</div></div>`;
+  }
   if(e.t === 'obj'){
     const bf = base && base.t === 'obj' ? Object.fromEntries(base.v) : null;
     const inner = stateHtml(Object.fromEntries(e.v), bf, { prefix: name + '.', nested: true });
@@ -1070,7 +1244,8 @@ function stateHtml(vars, baseVars, opts = {}){
   const ptrNames = new Set(ptrs.map(p => p[0]));
   const entries = Object.entries(vars);
   // linked lists: a list fully contained in another one becomes a label on that list's node
-  const chains = entries.filter(([, v]) => v.t === 'chain' && v.ids.length);
+  const treeIds = n => !n || n.more ? [] : [n.id, ...treeIds(n.l), ...treeIds(n.r)];
+  const chains = entries.filter(([, v]) => (v.t === 'chain' && v.ids.length) || (v.t === 'tree' && v.root && !v.root.more)).map(([k, v]) => [k, v.t === 'tree' ? { ids: treeIds(v.root) } : v]);
   const byId = {}, hidden = new Set();
   chains.forEach(([k, v], idx) => {
     (byId[v.ids[0]] = byId[v.ids[0]] || []).push(k);
@@ -1081,7 +1256,7 @@ function stateHtml(vars, baseVars, opts = {}){
   for(const [k, v] of entries){
     const b = baseVars ? baseVars[k] : undefined;
     const isStrCells = v.t === 'str' && v.n >= 2 && v.n <= 40 && !v.v.includes('\n');
-    const small = isScalar(v) || (v.t === 'str' && !isStrCells) || (v.t === 'tuple' && v.n <= 3 && v.v.every(isScalar)) || (v.t === 'chain' && !v.ids.length);
+    const small = (v.t === 'tree' && !v.root) || isScalar(v) || (v.t === 'str' && !isStrCells) || (v.t === 'tuple' && v.n <= 3 && v.v.every(isScalar)) || (v.t === 'chain' && !v.ids.length);
     if(small){
       let cls = 'sc';
       if(ptrNames.has(k)) cls += ' ptr';
@@ -1100,7 +1275,7 @@ function show(i){
   cur = Math.max(0, Math.min(steps.length - 1, i));
   const s = steps[cur];
   $('#scrub').value = String(cur);
-  $('#stepOf').textContent = `Step ${cur + 1} of ${steps.length}`;
+  $('#stepOf').textContent = `${entry && cases.length > 1 ? `Case ${caseIdx + 1} · ` : ''}Step ${cur + 1} of ${steps.length}`;
   const lineText = s.line ? (runLines[s.line - 1] || '').trim() : '';
   const t = $('#stTitle');
   t.className = s.ev === 'error' || s.ev === 'limit' ? 'bad' : '';
@@ -1114,7 +1289,10 @@ function show(i){
   $('#stNotes').innerHTML = notesFor(s).map(([c, h]) => `<li class="${c}">${h}</li>`).join('');
 
   let h = '';
-  if(s.ev === 'done' && s.ret) h += `<div class="var"><div class="sec-title">Result</div></div><div class="result">${esc(short(pr(s.ret), 400))}</div>`;
+  if(s.ev === 'done' && s.ret){
+    h += `<div class="sec-title">Output</div><div class="result${s.pass === false ? ' bad' : ''}">${esc(short(pr(s.ret), 400))}</div>`;
+    if(s.expected) h += `<div class="sec-title">Expected</div><div class="result">${esc(short(pr(s.expected), 400))}</div>`;
+  }
   if(s.ev === 'error') h += `<div class="result bad">${esc(s.msg)}</div>`;
   if(s.stack.length > 1){
     h += `<div class="sec-title">Call stack</div><div class="stackl">${s.stack.map(([fn, ln], k) => `${k ? '<span class="sep">›</span>' : ''}<span class="frame${k === s.stack.length - 1 ? ' top' : ''}">${esc(fn)}<span class="idx"> :${ln}</span></span>`).join('')}</div>`;
@@ -1176,17 +1354,14 @@ function paintCode(follow){
 /* ---------- problems and solutions ---------- */
 function renderProblem(){
   const opt = p => `<option value="${p.id}"${p === prob ? ' selected' : ''}>${esc(p.title)}</option>`;
-  $('#problemSel').innerHTML = `<optgroup label="Playground">${opt(FREE)}</optgroup><optgroup label="Problems">${PROBLEMS.map(opt).join('')}</optgroup>`;
+  $('#problemSel').innerHTML = `<optgroup label="Playground">${opt(FREE)}</optgroup><optgroup label="Example problems">${PROBLEMS.map(opt).join('')}</optgroup>`;
   $('#desc').innerHTML = `<h3>${esc(prob.title)}${prob.level ? ` <span class="level ${prob.level}">${prob.level}</span>` : ''}</h3>` + prob.desc.map(d => `<p>${d}</p>`).join('');
   $('.problem').classList.toggle('free', !!prob.free);
   $('#examples').hidden = !!prob.free;
-  $('#stdinRow').hidden = !prob.free;
   $('#cx').hidden = !!prob.free;
-  stdinEl.value = store.get('as.stdin') ?? (FREE.stdin || '');
-  callEl.placeholder = prob.free ? 'Optional: a call to trace, such as solve([3, 1, 2]). Empty runs the whole script.' : '';
   $('#examples').innerHTML = prob.examples.map(([inp, out, why], k) => `<div class="ex-item"><span>Example ${k + 1}:</span> ${esc(inp)}<br><span>Output:</span> ${esc(out)}${why ? `<div class="why">${esc(why)}</div>` : ''}</div>`).join('');
   sol = prob.solutions.find(x => x.id === store.get(`as.sol.${prob.id}`)) || prob.solutions[0];
-  callEl.value = store.get(callKey()) ?? prob.call;
+  loadCases();
   renderSolution();
 }
 function renderSolution(){
@@ -1196,11 +1371,146 @@ function renderSolution(){
   codeEl.scrollTop = 0;
   markStale();
   paintCode(false);
+  refreshEntry(true);
 }
 function markStale(){
-  if(!steps.length) return;
+  if(!traces.length) return;
   stale = true; stopPlay();
   $('#stale').hidden = false;
+  renderCaseTabs(); renderCaseResult();
+}
+
+/* ---------- test cases ---------- */
+function loadCases(){
+  let c = null;
+  try{ c = JSON.parse(store.get(casesKey())); }catch{}
+  cases = Array.isArray(c) && c.length ? c : prob.cases.map(x => ({ vals: { ...x.vals }, exp: x.exp || '' }));
+  caseIdx = 0; traces = [];
+}
+const saveCases = () => store.set(casesKey(), JSON.stringify(cases));
+
+/* split on top-level commas, ignoring commas inside brackets and strings */
+function splitTop(t){
+  const out = []; let depth = 0, q = null, curS = '';
+  for(let i = 0; i < t.length; i++){
+    const ch = t[i];
+    if(q){ curS += ch; if(ch === '\\'){ curS += t[++i] ?? ''; } else if(ch === q) q = null; continue; }
+    if(ch === '"' || ch === "'"){ q = ch; curS += ch; continue; }
+    if('([{'.includes(ch)) depth++;
+    else if(')]}'.includes(ch)) depth--;
+    if(ch === ',' && depth === 0){ out.push(curS); curS = ''; continue; }
+    curS += ch;
+  }
+  if(curS.trim()) out.push(curS);
+  return out;
+}
+
+/* find the function a LeetCode-style test runs: a public method of class Solution, else a top-level function */
+function detectEntry(code){
+  const L = code.split('\n');
+  const ind = t => t.match(/^[ \t]*/)[0].replace(/\t/g, '    ').length;
+  const blank = t => /^\s*(#.*)?$/.test(t);
+  const defs = [];
+  let cls = null;
+  for(let i = 0; i < L.length; i++){
+    const line = L[i];
+    if(blank(line)) continue;
+    const n = ind(line);
+    if(cls && n <= cls.ind) cls = null;
+    let m;
+    if((m = /^\s*class\s+(\w+)/.exec(line))){ if(n === 0) cls = { name: m[1], ind: n, mind: null }; continue; }
+    if(!(m = /^\s*(?:async\s+)?def\s+(\w+)\s*\(/.exec(line))) continue;
+    let depth = 0, txt = '', j = i, k = m[0].length - 1;
+    outer: for(; j < L.length; j++){
+      const seg = j === i ? L[j].slice(k) : L[j];
+      for(const ch of seg){
+        if(ch === '('){ depth++; if(depth === 1) continue; }
+        else if(ch === ')'){ depth--; if(depth === 0) break outer; }
+        txt += ch;
+      }
+      txt += '\n';
+    }
+    let e = j + 1;
+    while(e < L.length && (blank(L[e]) || ind(L[e]) > n)) e++;
+    const d = { name: m[1], cls: null, start: i, end: e, params: [] };
+    if(cls && n > cls.ind){ if(cls.mind === null) cls.mind = n; if(n !== cls.mind) continue; d.cls = cls.name; }
+    else if(n !== 0) continue;
+    const ps = splitTop(txt.replace(/#.*$/gm, '')).map(x => x.trim()).filter(Boolean);
+    ps.forEach((x, idx) => {
+      if(x === '/' || x.startsWith('*')) return;
+      const nm = (x.match(/^(\w+)/) || [])[1];
+      if(!nm || (idx === 0 && d.cls && (nm === 'self' || nm === 'cls'))) return;
+      d.params.push(nm);
+    });
+    defs.push(d);
+  }
+  let cands = defs.filter(d => d.cls === 'Solution' && !d.name.startsWith('_'));
+  if(!cands.length) cands = defs.filter(d => !d.cls && !d.name.startsWith('_'));
+  if(!cands.length) return null;
+  const called = d => cands.some(o => o !== d && new RegExp(`\\b${d.name}\\s*\\(`).test(L.slice(o.start + 1, o.end).join('\n')));
+  const roots = cands.filter(d => !called(d));
+  const pick = (roots.length ? roots : cands).at(-1);
+  return { cls: pick.cls, fn: pick.name, params: pick.params };
+}
+
+function refreshEntry(force){
+  entry = detectEntry(codeEl.value);
+  const sig = J(entry);
+  if(force || sig !== entrySig){ entrySig = sig; renderCaseTabs(); renderFields(); renderCaseResult(); }
+}
+
+function caseBadge(k){
+  const t = traces[k];
+  if(!t || stale) return '';
+  if(t.status !== 'done' || t.pass === false) return 'ko';
+  return t.pass === true ? 'ok' : 'ran';
+}
+function renderCaseTabs(){
+  const box = $('#caseTabs');
+  if(!entry){ box.innerHTML = ''; return; }
+  box.innerHTML = cases.map((c, k) => `<span class="ctab${k === caseIdx ? ' on' : ''}"><button type="button" role="tab" data-k="${k}" aria-selected="${k === caseIdx}"><span class="badge ${caseBadge(k)}"></span>Case ${k + 1}</button>${cases.length > 1 ? `<button type="button" class="x" data-x="${k}" aria-label="Remove case ${k + 1}" title="Remove this case">×</button>` : ''}</span>`).join('') +
+    `<button type="button" class="cadd" id="addCase" title="Add a test case (copies the current one)" aria-label="Add a test case">+</button>`;
+}
+function renderFields(){
+  const box = $('#caseFields');
+  if(!entry){ box.innerHTML = '<p class="hint">No function found in the code, so Run traces the whole script from top to bottom.</p>'; return; }
+  const c = cases[caseIdx];
+  const field = (id, label, val, cls, ph) => `<label class="${cls}" for="f-${id}">${label}</label><input id="f-${id}" data-p="${esc(id)}" value="${esc(val)}" spellcheck="false" autocomplete="off"${ph ? ` placeholder="${esc(ph)}"` : ''}>`;
+  box.innerHTML = (entry.params.length ? entry.params.map(p => field(p, `${esc(p)} =`, c.vals[p] ?? '', '', '')).join('') : `<p class="hint">${esc(entry.fn)}() takes no arguments.</p>`) +
+    field('__exp', 'Expected', c.exp || '', 'exp', 'optional, compared with the output');
+}
+function renderCaseResult(){
+  const el = $('#caseResult');
+  const t = traces[entry ? caseIdx : 0];
+  if(!t || stale || !entry){ el.hidden = true; return; }
+  const last = t.steps[t.steps.length - 1];
+  let h;
+  if(t.status === 'error') h = `<span class="verdict ko">Runtime error</span><span>${esc(short(last.msg.split('\n').pop(), 120))}</span>`;
+  else if(t.status === 'limit') h = `<span class="verdict ko">Step limit reached</span>`;
+  else{
+    h = `<span>Output ${C(short(pr(t.ret), 80))}</span>`;
+    if(t.pass === true) h = `<span class="verdict ok">Accepted</span>` + h;
+    else if(t.pass === false) h = `<span class="verdict ko">Wrong answer</span>${h}<span>Expected ${C(short(pr(last.expected), 80))}</span>`;
+  }
+  el.innerHTML = h; el.hidden = false;
+}
+
+/* "nums = [1,2], k = 3" fills fields by name; several lines fill several cases, one line per parameter */
+function parsePaste(text, params){
+  let t = text.trim().replace(/^input\s*:?\s*/i, '');
+  if(params.length && new RegExp(`^(${params.join('|')})\\s*=`).test(t)){
+    const vals = {};
+    for(const part of splitTop(t.replace(/\n/g, ', '))){
+      const m = /^\s*(\w+)\s*=\s*([\s\S]*)$/.exec(part);
+      if(m && params.includes(m[1])) vals[m[1]] = m[2].trim();
+    }
+    return Object.keys(vals).length ? [vals] : null;
+  }
+  const lines = t.split('\n').map(x => x.trim()).filter(Boolean);
+  if(lines.length < 2 || !params.length || lines.length % params.length) return null;
+  const out = [];
+  for(let i = 0; i < lines.length; i += params.length) out.push(Object.fromEntries(params.map((p, j) => [p, lines[i + j]])));
+  return out;
 }
 
 /* ---------- playback ---------- */
@@ -1222,10 +1532,41 @@ $('#tabs').addEventListener('click', e => {
   renderSolution(); run();
 });
 $('#resetBtn').addEventListener('click', () => {
-  store.del(codeKey()); store.del(callKey()); callEl.value = prob.call;
-  if(prob.free){ store.del('as.stdin'); stdinEl.value = FREE.stdin; }
-  renderSolution(); run();
+  store.del(codeKey()); store.del(casesKey());
+  loadCases(); renderSolution(); run();
 });
+$('#caseTabs').addEventListener('click', e => {
+  const x = e.target.closest('[data-x]'), b = e.target.closest('[data-k]');
+  if(e.target.closest('#addCase')){
+    cases.push({ vals: { ...cases[caseIdx].vals }, exp: cases[caseIdx].exp });
+    caseIdx = cases.length - 1; saveCases(); markStale(); renderCaseTabs(); renderFields();
+    $('#caseFields input')?.focus();
+  }else if(x){
+    const k = +x.dataset.x;
+    cases.splice(k, 1); traces.splice(k, 1);
+    if(caseIdx >= k && caseIdx > 0) caseIdx--;
+    saveCases(); renderCaseTabs(); renderFields(); selectTrace();
+  }else if(b){
+    caseIdx = +b.dataset.k; renderCaseTabs(); renderFields(); stopPlay(); selectTrace();
+  }
+});
+$('#caseFields').addEventListener('input', e => {
+  const inp = e.target.closest('input[data-p]'); if(!inp) return;
+  if(inp.dataset.p === '__exp') cases[caseIdx].exp = inp.value; else cases[caseIdx].vals[inp.dataset.p] = inp.value;
+  saveCases(); markStale();
+});
+$('#caseFields').addEventListener('paste', e => {
+  const inp = e.target.closest('input[data-p]'); if(!inp || !entry || inp.dataset.p === '__exp') return;
+  const parsed = parsePaste(e.clipboardData.getData('text'), entry.params);
+  if(!parsed) return;
+  e.preventDefault();
+  parsed.forEach((vals, j) => {
+    if(j) cases.push({ vals: {}, exp: '' });
+    Object.assign(cases[j ? cases.length - 1 : caseIdx].vals, vals);
+  });
+  saveCases(); markStale(); renderCaseTabs(); renderFields();
+});
+$('#caseFields').addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.matches('input')){ e.preventDefault(); run(); } });
 $('#runBtn').addEventListener('click', run);
 $('#first').addEventListener('click', () => { stopPlay(); show(0); });
 $('#last').addEventListener('click', () => { stopPlay(); show(steps.length - 1); });
@@ -1236,13 +1577,11 @@ $('#scrub').addEventListener('input', e => { stopPlay(); show(+e.target.value); 
 $('#speed').value = String(speed);
 if(!$('#speed').value){ $('#speed').value = '1'; speed = 1; }
 $('#speed').addEventListener('change', e => { speed = Number(e.target.value) || 1; store.set('as.speed', String(speed)); });
-codeEl.addEventListener('input', () => { store.set(codeKey(), codeEl.value); markStale(); paintCode(false); });
+codeEl.addEventListener('input', () => { store.set(codeKey(), codeEl.value); markStale(); paintCode(false); refreshEntry(); });
 codeEl.addEventListener('scroll', () => { hlEl.scrollTop = codeEl.scrollTop; hlEl.scrollLeft = codeEl.scrollLeft; });
-callEl.addEventListener('input', () => { store.set(callKey(), callEl.value); markStale(); });
-stdinEl.addEventListener('input', () => { store.set('as.stdin', stdinEl.value); markStale(); });
-for(const el of [codeEl, callEl, stdinEl]){
+for(const el of [codeEl]){
   el.addEventListener('keydown', e => {
-    if(e.key === 'Enter' && (e.ctrlKey || e.metaKey || el === callEl)){ e.preventDefault(); run(); }
+    if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); run(); }
     else if(el === codeEl && e.key === 'Tab' && !e.shiftKey && !e.altKey){
       e.preventDefault();
       el.setRangeText('    ', el.selectionStart, el.selectionEnd, 'end');
