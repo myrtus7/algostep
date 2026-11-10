@@ -1,0 +1,1266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AlgoStep</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E6B5C'/%3E%3Crect x='5' y='13' width='6' height='6' rx='1.5' fill='%23fff' opacity='.7'/%3E%3Crect x='13' y='13' width='6' height='6' rx='1.5' fill='%23fff'/%3E%3Crect x='21' y='13' width='6' height='6' rx='1.5' fill='%23fff' opacity='.7'/%3E%3Cpath d='M16 23.5l-2.5 3h5z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9EEEC; --panel:#FFFFFF; --soft:#F3F6F5; --ink:#14211E; --muted:#56685F; --line:#C9D4D0; --line-soft:#DFE6E3;
+  --accent:#1E6B5C; --accent-ink:#FFFFFF; --accent-soft:#D8EBE5;
+  --good:#1D7650; --good-bg:#DDF1E5; --bad:#AE3445; --bad-bg:#F7E4E7; --chg:#8E5C00; --chg-bg:#FAEED3;
+  --ptr:#2D5F8F; --ptr-bg:#DCE8F4; --mark:#D3E9E2; --mark-ink:#0D2B24; --prev:#EEF3F1;
+  --sans:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --hl-kw:#1E6B5C;--hl-str:#9A4A12;--hl-num:#2D5F8F;--hl-com:#7D8B88;--hl-fn:#7A4FA8;--hl-type:#24808F;--hl-op:#6A7884;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D1513; --panel:#141E1B; --soft:#1A2622; --ink:#E2EBE8; --muted:#93A6A0; --line:#2A3A35; --line-soft:#21302B;
+    --accent:#6CC9B4; --accent-ink:#0A1D18; --accent-soft:#1B3730;
+    --good:#63C493; --good-bg:#16352A; --bad:#F08394; --bad-bg:#3A1D24; --chg:#E7B65C; --chg-bg:#3A2D12;
+    --ptr:#7FB1E3; --ptr-bg:#1E3247; --mark:#1F4038; --mark-ink:#E5F6F1; --prev:#18241F;
+    --hl-kw:#6CC9B4;--hl-str:#E8A672;--hl-num:#7FB1E3;--hl-com:#728480;--hl-fn:#C3A6EE;--hl-type:#5FC3D2;--hl-op:#93A6A0;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D1513; --panel:#141E1B; --soft:#1A2622; --ink:#E2EBE8; --muted:#93A6A0; --line:#2A3A35; --line-soft:#21302B;
+  --accent:#6CC9B4; --accent-ink:#0A1D18; --accent-soft:#1B3730;
+  --good:#63C493; --good-bg:#16352A; --bad:#F08394; --bad-bg:#3A1D24; --chg:#E7B65C; --chg-bg:#3A2D12;
+  --ptr:#7FB1E3; --ptr-bg:#1E3247; --mark:#1F4038; --mark-ink:#E5F6F1; --prev:#18241F;
+  --hl-kw:#6CC9B4;--hl-str:#E8A672;--hl-num:#7FB1E3;--hl-com:#728480;--hl-fn:#C3A6EE;--hl-type:#5FC3D2;--hl-op:#93A6A0;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font:13px/1.4 var(--mono);background:var(--soft);border:1px solid var(--line-soft);border-radius:4px;padding:0 4px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px clamp(14px,3vw,32px) 10px}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.brand h1{margin:0;font:600 22px/1.2 var(--mono);letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.brand .logo{width:28px;height:28px;flex:none}
+.brand h1 b{color:var(--accent);font-weight:600}
+.brand p{margin:0;color:var(--muted);font-size:14px}
+.status{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.status.loading::before{background:var(--chg);animation:pulse 1.2s ease-in-out infinite}
+.status.ready::before{background:var(--good)}
+.status.error{color:var(--bad);border-color:var(--bad)}
+.status.error::before{background:var(--bad)}
+@keyframes pulse{50%{opacity:.3}}
+
+main{padding:0 clamp(14px,3vw,32px) 40px;display:grid;gap:18px}
+.pane{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-width:0}
+.pane-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 8px 16px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.pane-head h2{margin:0;font-size:15px;font-weight:600}
+.btn{border:1px solid var(--line);background:var(--soft);border-radius:7px;padding:6px 12px;font-size:14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--muted);padding:6px 8px}
+.btn.quiet:hover{color:var(--ink)}
+
+/* problem */
+.problem{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0}
+.problem .desc{padding:14px 18px 16px;border-right:1px solid var(--line-soft)}
+.problem .desc h3{margin:0 0 6px;font:600 19px/1.3 var(--sans);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.level{font:500 12px/1 var(--sans);padding:4px 8px;border-radius:999px;background:var(--good-bg);color:var(--good)}
+.level.Medium{background:var(--chg-bg);color:var(--chg)}
+.problem .desc p{margin:0 0 6px;max-width:72ch}
+.problem .ex{padding:14px 18px 16px;display:grid;gap:8px;align-content:start}
+.ex-item{background:var(--soft);border:1px solid var(--line-soft);border-radius:8px;padding:8px 12px;font:13px/1.55 var(--mono)}
+.ex-item span{color:var(--muted)}
+.ex-item .why{font-family:var(--sans);color:var(--muted);font-size:13px}
+select.btn{padding-right:8px;max-width:300px}
+
+/* workspace */
+.work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px;align-items:start}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:1px solid transparent;background:transparent;border-radius:7px;padding:5px 11px;font-size:14px;cursor:pointer;color:var(--muted)}
+.tab:hover{color:var(--ink);border-color:var(--line)}
+.tab[aria-selected="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent);font-weight:600}
+.cx{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px 16px;border-bottom:1px solid var(--line-soft);font-size:13px;color:var(--muted)}
+.cx b{font:600 13px/1 var(--mono);color:var(--ink);background:var(--soft);border:1px solid var(--line-soft);border-radius:5px;padding:3px 7px}
+.cx .note{flex-basis:100%}
+.editor{position:relative;display:flex;flex-direction:column;height:min(58vh,520px);min-height:300px}
+.editor textarea,.editor .hl{font:13.5px/1.6 var(--mono);tab-size:4;white-space:pre;padding:12px 16px 12px 54px;margin:0;border:0}
+.editor textarea{position:relative;z-index:1;flex:1;width:100%;resize:none;overflow:auto;background:transparent;color:transparent;caret-color:var(--ink)}
+.editor textarea::selection{background:var(--mark);color:transparent}
+.editor textarea:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--accent-soft)}
+.hl{position:absolute;inset:0;overflow:hidden;pointer-events:none;color:var(--ink)}
+.hl .ln{display:block;position:relative;min-width:max-content;margin-right:-16px;padding-right:16px}
+.hl .ln::before{content:attr(data-n);position:absolute;left:-46px;width:32px;text-align:right;color:var(--muted);opacity:.6;font-size:12px}
+.hl .ln.cur{background:var(--mark);box-shadow:inset 3px 0 0 var(--accent)}
+.hl .ln.cur::before{opacity:1;color:var(--accent);font-weight:600;content:"▶ " attr(data-n)}
+.hl .ln.prev{background:var(--prev)}
+.hl .ln.err{background:var(--bad-bg);box-shadow:inset 3px 0 0 var(--bad)}
+.hl .ln.err::before{opacity:1;color:var(--bad);font-weight:600}
+.hl .ln{margin-left:-54px;padding-left:54px}
+.hl .ln::before{left:6px}
+.hl .k{color:var(--hl-kw);font-weight:600}
+.hl .s{color:var(--hl-str)}
+.hl .n{color:var(--hl-num)}
+.hl .c{color:var(--hl-com);font-style:italic}
+.hl .f{color:var(--hl-fn)}
+.hl .t{color:var(--hl-type)}
+.hl .o{color:var(--hl-op)}
+.foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px 12px 16px;border-top:1px solid var(--line-soft)}
+.foot .spacer{flex:1}
+.hint{color:var(--muted);font-size:13px}
+.callrow{display:flex;align-items:center;gap:10px;padding:10px 12px 0 16px;border-top:1px solid var(--line-soft)}
+.callrow label{font-size:13px;color:var(--muted);white-space:nowrap}
+.problem.free{grid-template-columns:1fr}
+.problem.free .desc{border-right:0}
+.callrow.stdin{align-items:flex-start}
+.callrow.stdin label{padding-top:7px}
+.callrow textarea{flex:1;min-width:0;min-height:68px;resize:vertical;border:1px solid var(--line);background:var(--soft);border-radius:7px;padding:6px 10px;font:13px/1.5 var(--mono);white-space:pre;overflow:auto}
+.callrow textarea:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.callrow input{flex:1;min-width:0;border:1px solid var(--line);background:var(--soft);border-radius:7px;padding:6px 10px;font:13px/1.4 var(--mono)}
+
+/* visualizer */
+.viz{min-height:420px}
+.vnav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:10px 12px 8px 16px;border-bottom:1px solid var(--line-soft)}
+.vnav .of{margin-left:auto;font-size:13px;color:var(--muted)}
+.scrub{padding:10px 16px 6px;display:flex;align-items:center;gap:10px}
+.scrub input{flex:1;accent-color:var(--accent)}
+.viz-empty{padding:60px 20px;text-align:center;color:var(--muted)}
+.stale{margin:8px 16px 0;padding:8px 12px;border-radius:7px;background:var(--chg-bg);color:var(--chg);font-size:13px}
+.step{padding:10px 18px 14px;display:grid;gap:8px;border-bottom:1px solid var(--line-soft)}
+.step h3{margin:0;font:600 17px/1.35 var(--mono);overflow-wrap:anywhere;white-space:pre-wrap}
+.step h3.bad{color:var(--bad)}
+.meta{font-size:13px;color:var(--muted)}
+.notes{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.notes li{position:relative;padding-left:16px;font-size:14px}
+.notes li::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.notes li.c-true::before{background:var(--good)}
+.notes li.c-false::before{background:var(--bad)}
+.notes li.chg::before{background:var(--chg)}
+.notes li.ret::before{background:var(--accent)}
+.notes li.err{color:var(--bad);font-family:var(--mono);font-size:13px;white-space:pre-wrap}
+.notes li.err::before{background:var(--bad)}
+.tf{font-weight:600}.tf.t{color:var(--good)}.tf.f{color:var(--bad)}
+
+.state{padding:14px 18px 18px;display:grid;gap:14px}
+.sec-title{font:600 12px/1 var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 -4px}
+.scalars{display:flex;flex-wrap:wrap;gap:8px}
+.sc{border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:13.5px/1.4 var(--mono);background:var(--panel);display:inline-flex;gap:8px;align-items:baseline;max-width:100%}
+.sc .nm{color:var(--muted)}
+.sc .vl{overflow-wrap:anywhere}
+.sc.ptr{border-color:var(--ptr)}
+.sc.ptr .nm{color:var(--ptr);font-weight:600}
+.chg{animation:flash .7s ease-out}
+.sc.chg,.cell.chg,.kv.chg,.node.chg{border-color:var(--chg);background:var(--chg-bg)}
+.sc.new,.cell.new,.chip.new,.kv.new{border-color:var(--good);background:var(--good-bg)}
+@keyframes flash{from{box-shadow:0 0 0 4px color-mix(in srgb,var(--chg) 35%,transparent)}to{box-shadow:0 0 0 0 transparent}}
+.var{display:grid;gap:6px;min-width:0}
+.vname{font:500 13.5px/1.3 var(--mono)}
+.vname small{font:400 12px/1 var(--sans);color:var(--muted);margin-left:6px}
+.vname.new::after{content:"new";font:600 11px/1 var(--sans);color:var(--good);background:var(--good-bg);border-radius:999px;padding:2px 7px;margin-left:8px}
+.row{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start}
+.cellw{display:grid;justify-items:center;gap:2px;min-width:40px}
+.cell{min-width:40px;height:40px;padding:0 8px;border:1px solid var(--line);border-radius:7px;display:grid;place-items:center;font:500 14px/1 var(--mono);background:var(--soft);white-space:nowrap}
+.cell.focus{border-color:var(--ptr);background:var(--ptr-bg);box-shadow:0 0 0 1px var(--ptr)}
+.cell.ghost{border-style:dashed;background:transparent;color:var(--muted)}
+.idx{font:11px/1 var(--mono);color:var(--muted)}
+.ptrs{font:600 11.5px/1.15 var(--mono);color:var(--ptr);text-align:center;min-height:1.15em}
+.ptrs i{font-style:normal;display:block}
+.ptrs i::before{content:"↑ "}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:3px 11px;font:500 13.5px/1.4 var(--mono);background:var(--soft)}
+.emptyv{color:var(--muted);font:13px/1.4 var(--mono);font-style:italic}
+.kvs{display:flex;flex-wrap:wrap;gap:4px}
+.kv{border:1px solid var(--line);border-radius:7px;overflow:hidden;display:grid;font:13.5px/1.3 var(--mono);text-align:center;min-width:44px}
+.kv span{padding:5px 9px;white-space:nowrap}
+.kv span:first-child{background:color-mix(in srgb,var(--line-soft) 60%,transparent);color:var(--muted);font-size:12.5px}
+.grid{border-collapse:separate;border-spacing:3px;font:500 13.5px/1 var(--mono)}
+.grid td{min-width:34px;height:34px;text-align:center;border:1px solid var(--line);border-radius:6px;background:var(--soft);padding:0 6px}
+.grid th{font:11px/1 var(--mono);color:var(--muted);font-weight:400;padding:0 4px}
+.grid td.chg{border-color:var(--chg);background:var(--chg-bg)}
+.grid td.focus{border-color:var(--ptr);background:var(--ptr-bg)}
+.chain{display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px}
+.nodew{display:grid;justify-items:center;gap:2px}
+.node{min-width:40px;height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:20px;display:grid;place-items:center;font:500 14px/1 var(--mono);background:var(--accent-soft)}
+.arr{color:var(--muted);font:14px/40px var(--mono)}
+.nil{color:var(--muted);font:13px/40px var(--mono);font-style:italic}
+.obj{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:10px}
+.stackl{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font:13px/1.4 var(--mono)}
+.frame{border:1px solid var(--line);border-radius:6px;padding:2px 8px;background:var(--soft)}
+.frame.top{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.stackl .sep{color:var(--muted)}
+.out{margin:0;background:var(--soft);border:1px solid var(--line-soft);border-radius:8px;padding:10px 12px;font:12.5px/1.5 var(--mono);white-space:pre-wrap;max-height:180px;overflow:auto}
+.result{border:1px solid var(--good);background:var(--good-bg);border-radius:8px;padding:10px 14px;font:600 15px/1.4 var(--mono)}
+.result.bad{border-color:var(--bad);background:var(--bad-bg);color:var(--bad);font-weight:500;font-size:13px;white-space:pre-wrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted);padding:0 18px 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:13px;height:13px;border-radius:3px;border:1px solid}
+.legend .l1 i{background:var(--chg-bg);border-color:var(--chg)}
+.legend .l2 i{background:var(--good-bg);border-color:var(--good)}
+.legend .l3 i{background:var(--ptr-bg);border-color:var(--ptr)}
+.legend .l4 i{background:var(--mark);border-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){ .chg{animation:none} .status.loading::before{animation:none} }
+@media (max-width:980px){
+  .work{grid-template-columns:1fr}
+  .problem{grid-template-columns:1fr}
+  .problem .desc{border-right:0;border-bottom:1px solid var(--line-soft)}
+  .editor{height:auto;min-height:0}
+  .editor textarea{min-height:300px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--accent)"/><rect x="5" y="13" width="6" height="6" rx="1.5" fill="var(--accent-ink)" opacity=".7"/><rect x="13" y="13" width="6" height="6" rx="1.5" fill="var(--accent-ink)"/><rect x="21" y="13" width="6" height="6" rx="1.5" fill="var(--accent-ink)" opacity=".7"/><path d="M16 23.5l-2.5 3h5z" fill="var(--accent-ink)"/></svg><span>Algo<b>Step</b></span></h1>
+    <p>Step through an algorithm line by line and watch its variables change.</p>
+  </div>
+  <div id="status" class="status loading" role="status">Starting Python in your browser…</div>
+</header>
+
+<main>
+  <section class="pane">
+    <div class="pane-head">
+      <h2>Problem</h2>
+      <select class="btn" id="problemSel" aria-label="Problem"></select>
+    </div>
+    <div class="problem">
+      <div class="desc" id="desc"></div>
+      <div class="ex" id="examples"></div>
+    </div>
+  </section>
+
+  <section class="work">
+    <div class="pane">
+      <div class="pane-head">
+        <div class="tabs" id="tabs" role="tablist" aria-label="Solutions"></div>
+        <button class="btn quiet" id="resetBtn" type="button" title="Restore this solution’s original code and input">Reset</button>
+      </div>
+      <div class="cx" id="cx"></div>
+      <div class="editor"><pre class="hl" aria-hidden="true"></pre><textarea id="code" spellcheck="false" wrap="off" aria-label="Python code"></textarea></div>
+      <div class="callrow stdin" id="stdinRow" hidden><label for="stdin">Input</label><textarea id="stdin" spellcheck="false" wrap="off" aria-label="Standard input"></textarea></div>
+      <div class="callrow"><label for="call">Run</label><input id="call" spellcheck="false" autocomplete="off" aria-label="Call to trace"></div>
+      <div class="foot">
+        <button class="btn primary" id="runBtn" type="button" disabled>Run and step through</button>
+        <span class="hint">Ctrl + Enter</span>
+        <span class="spacer"></span>
+        <span class="hint" id="summary"></span>
+      </div>
+    </div>
+
+    <div class="pane viz" id="viz" aria-live="polite">
+      <div class="vnav">
+        <button class="btn" id="first" type="button" aria-label="First step" title="First step (Home)">⏮</button>
+        <button class="btn" id="prev" type="button" title="Previous step (←)">Previous</button>
+        <button class="btn" id="play" type="button">Play</button>
+        <button class="btn" id="next" type="button" title="Next step (→)">Next</button>
+        <button class="btn" id="last" type="button" aria-label="Last step" title="Last step (End)">⏭</button>
+        <select class="btn" id="speed" aria-label="Playback speed" title="Playback speed">
+          <option value="2.5">Very slow</option>
+          <option value="1.6">Slow</option>
+          <option value="1" selected>Normal</option>
+          <option value="0.45">Fast</option>
+          <option value="0.15">Very fast</option>
+        </select>
+        <span class="of" id="stepOf"></span>
+      </div>
+      <div class="scrub" id="scrubRow" hidden><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"></div>
+      <div class="stale" id="stale" hidden>The code changed since this run. Run it again to refresh the steps.</div>
+      <div class="viz-empty" id="vizEmpty">Python is loading. The selected solution runs as soon as it’s ready.</div>
+      <div id="stepWrap" hidden>
+        <div class="step">
+          <h3 id="stTitle"></h3>
+          <div class="meta" id="stMeta"></div>
+          <ul class="notes" id="stNotes"></ul>
+        </div>
+        <div class="state" id="state"></div>
+        <div class="legend"><span class="l4"><i></i>Next line to run</span><span class="l1"><i></i>Changed by the last line</span><span class="l2"><i></i>Added</span><span class="l3"><i></i>Index pointer</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script type="text/x-python" id="py-tracer">
+import sys, io, ast, json, types, traceback, collections, functools
+
+FN = '<algo>'
+LIM = 200
+SAFE_CALLS = {'len', 'abs', 'min', 'max', 'isinstance', 'int', 'str', 'float', 'ord', 'chr', 'bool', 'type', 'sum', 'any', 'all'}
+PRELUDE = '''
+from typing import *
+import collections, heapq, math, bisect, itertools, functools, string
+from collections import defaultdict, Counter, deque, OrderedDict
+from functools import cache, lru_cache
+from heapq import heappush, heappop, heapify
+
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+def linked(values):
+    Node = globals()['ListNode']
+    head = None
+    for v in reversed(list(values)):
+        head = Node(v, head)
+    return head
+'''
+
+def _skip(v):
+    return isinstance(v, (types.FunctionType, types.BuiltinFunctionType, types.MethodType, types.ModuleType, type, functools.partial)) \
+        or type(v).__module__ in ('typing', 'functools')
+
+def _enc(v, depth=0, seen=frozenset()):
+    if v is None: return {'t': 'none'}
+    if isinstance(v, bool): return {'t': 'bool', 'v': v}
+    if isinstance(v, int):
+        return {'t': 'int', 'v': v} if -2**53 < v < 2**53 else {'t': 'int', 'v': str(v)}
+    if isinstance(v, float): return {'t': 'float', 'v': repr(v)}
+    if isinstance(v, str): return {'t': 'str', 'v': v[:1000], 'n': len(v)}
+    if _skip(v): return {'t': 'repr', 'v': '<' + getattr(v, '__name__', type(v).__name__) + '>'}
+    if depth > 4: return {'t': 'more', 'v': type(v).__name__}
+    if id(v) in seen: return {'t': 'more', 'v': type(v).__name__}
+    seen = seen | {id(v)}
+    if isinstance(v, (list, tuple, collections.deque)):
+        t = 'tuple' if isinstance(v, tuple) else 'deque' if isinstance(v, collections.deque) else 'list'
+        items = list(v)
+        return {'t': t, 'v': [_enc(x, depth + 1, seen) for x in items[:LIM]], 'n': len(items)}
+    if isinstance(v, (set, frozenset)):
+        items = list(v)
+        try: items.sort()
+        except Exception: pass
+        return {'t': 'set', 'v': [_enc(x, depth + 1, seen) for x in items[:LIM]], 'n': len(items)}
+    if isinstance(v, dict):
+        r = {'t': 'dict', 'v': [[_enc(k, depth + 1, seen), _enc(x, depth + 1, seen)] for k, x in list(v.items())[:LIM]], 'n': len(v)}
+        if type(v) is not dict: r['cls'] = type(v).__name__
+        return r
+    d = getattr(v, '__dict__', None)
+    if isinstance(d, dict):
+        if 'next' in d and ('val' in d or 'value' in d):
+            vals, ids, pos, cur, cyc = [], [], {}, v, None
+            while cur is not None and len(vals) < 50:
+                if id(cur) in pos:
+                    cyc = pos[id(cur)]
+                    break
+                pos[id(cur)] = len(vals)
+                cd = getattr(cur, '__dict__', {})
+                vals.append(_enc(cd.get('val', cd.get('value')), depth + 1, seen))
+                ids.append(id(cur))
+                cur = cd.get('next')
+            return {'t': 'chain', 'cls': type(v).__name__, 'v': vals, 'ids': ids, 'cycle': cyc, 'more': cur is not None and cyc is None}
+        return {'t': 'obj', 'cls': type(v).__name__,
+                'v': [[k, _enc(x, depth + 1, seen)] for k, x in d.items() if not k.startswith('__') and not _skip(x)]}
+    return {'t': 'repr', 'v': repr(v)[:300]}
+
+def _safe(node):
+    for n in ast.walk(node):
+        if isinstance(n, (ast.NamedExpr, ast.Await, ast.Yield, ast.YieldFrom, ast.Lambda)): return False
+        if isinstance(n, ast.Call) and not (isinstance(n.func, ast.Name) and n.func.id in SAFE_CALLS): return False
+    return True
+
+def _conds(src):
+    out = {}
+    try: tree = ast.parse(src)
+    except SyntaxError: return out
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.If, ast.While)) and not isinstance(node.test, ast.Constant) and _safe(node.test):
+            seg = ast.get_source_segment(src, node.test) or ''
+            out[node.lineno] = (compile(ast.Expression(node.test), '<cond>', 'eval'), ' '.join(seg.split()))
+    return out
+
+class _Stop(BaseException): pass
+
+def run(code, call, max_steps, stdin=''):
+    steps = []
+    out = io.StringIO()
+    g = {'__name__': '__main__'}
+    exec(PRELUDE, g)
+    base = set(g) | {'__builtins__'}
+    conds = _conds(code)
+    call = call.strip()
+    mode = 'call' if call else 'script'
+    state = {'final': None, 'exc': set()}
+
+    def chain_of(frame):
+        fr, f = [], frame
+        while f is not None:
+            if f.f_code.co_filename == FN: fr.append(f)
+            f = f.f_back
+        fr.reverse()
+        return fr
+
+    def vars_of(frame):
+        res = {}
+        is_mod = frame.f_code.co_name == '<module>'
+        for k, v in list(frame.f_locals.items()):
+            if k.startswith('__') or (is_mod and k in base) or _skip(v): continue
+            if k == 'self' and not getattr(v, '__dict__', None): continue
+            res[k] = _enc(v)
+        return res
+
+    def snap(frame, ev, fr=None, extra=None):
+        fr = fr if fr is not None else chain_of(frame)
+        s = {'ev': ev, 'line': frame.f_lineno, 'fn': frame.f_code.co_name, 'depth': len(fr),
+             'stack': [[f.f_code.co_name, f.f_lineno] for f in fr], 'vars': vars_of(frame)}
+        o = out.getvalue()
+        if o: s['out'] = o[-5000:]
+        if extra: s.update(extra)
+        return s
+
+    def record(s):
+        steps.append(s)
+        if len(steps) >= max_steps: raise _Stop()
+
+    def local(frame, event, arg):
+        if event == 'line':
+            state['exc'].discard(id(frame))
+            extra = None
+            c = conds.get(frame.f_lineno)
+            if c:
+                try: extra = {'cond': c[1], 'cv': bool(eval(c[0], frame.f_globals, frame.f_locals))}
+                except Exception: pass
+            record(snap(frame, 'line', extra=extra))
+        elif event == 'exception':
+            state['exc'].add(id(frame))
+        elif event == 'return':
+            if id(frame) in state['exc']:
+                state['exc'].discard(id(frame))
+                return local
+            fr = chain_of(frame)
+            if len(fr) == 1:
+                state['final'] = snap(frame, 'done', fr)
+            else:
+                record(snap(frame, 'return', fr, {'ret': _enc(arg)}))
+        return local
+
+    def tracer(frame, event, arg):
+        return local if frame.f_code.co_filename == FN else None
+
+    status, err, result, where = 'done', None, None, 'code'
+    old, old_in = sys.stdout, sys.stdin
+    sys.stdout, sys.stdin = out, io.StringIO(stdin)
+    try:
+        compiled = compile(code, FN, 'exec')
+        if mode == 'call':
+            exec(compiled, g)
+            where = 'call'
+            tree = ast.parse(call, mode='eval')
+            ev = lambda node: eval(compile(ast.Expression(node), '<call>', 'eval'), g)
+            b = tree.body
+            if isinstance(b, ast.Call) and not any(isinstance(a, ast.Starred) for a in b.args) and all(k.arg for k in b.keywords):
+                f = ev(b.func)
+                args = [ev(a) for a in b.args]
+                kw = {k.arg: ev(k.value) for k in b.keywords}
+                thunk = lambda: f(*args, **kw)
+            else:
+                cc = compile(tree, '<call>', 'eval')
+                thunk = lambda: eval(cc, g)
+        else:
+            thunk = lambda: exec(compiled, g)
+        where = 'code'
+        sys.settrace(tracer)
+        try:
+            result = thunk()
+        finally:
+            sys.settrace(None)
+    except _Stop:
+        status = 'limit'
+    except BaseException as e:
+        status, err = 'error', e
+    finally:
+        sys.settrace(None)
+        sys.stdout, sys.stdin = old, old_in
+
+    if status == 'error':
+        msg = ''.join(traceback.format_exception_only(type(err), err)).strip()
+        if isinstance(err, EOFError): msg += ' (the Input box has no more lines to read)'
+        frames, tb = [], err.__traceback__
+        while tb is not None:
+            if tb.tb_frame.f_code.co_filename == FN: frames.append(tb)
+            tb = tb.tb_next
+        s = {'ev': 'error', 'msg': msg}
+        if frames:
+            last = frames[-1]
+            s.update({'line': last.tb_lineno, 'fn': last.tb_frame.f_code.co_name, 'depth': len(frames),
+                      'stack': [[t.tb_frame.f_code.co_name, t.tb_lineno] for t in frames], 'vars': vars_of(last.tb_frame)})
+        elif isinstance(err, SyntaxError) and err.filename == FN:
+            s['line'] = err.lineno
+        elif where == 'call':
+            s['msg'] = 'In the Run line: ' + msg
+        if out.getvalue(): s['out'] = out.getvalue()[-5000:]
+        steps.append(s)
+    elif status == 'limit':
+        steps.append({'ev': 'limit', 'max': max_steps})
+    else:
+        s = state['final'] or {'ev': 'done'}
+        if out.getvalue(): s['out'] = out.getvalue()[-5000:]
+        if mode == 'call': s['ret'] = _enc(result)
+        steps.append(s)
+    return json.dumps({'status': status, 'steps': steps})
+</script>
+
+<script type="module">
+const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.mjs';
+const MAX_STEPS = 3000;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch{ return null; } },
+  set(k, v){ try{ localStorage.setItem(k, v); }catch{} },
+  del(k){ try{ localStorage.removeItem(k); }catch{} },
+};
+
+/* ---------- problems ---------- */
+const PROBLEMS = [
+  {
+    id: 'duplicate', title: 'Contains Duplicate', level: 'Easy',
+    desc: ['Given an integer array <code>nums</code>, return <code>True</code> if some value appears at least twice, and <code>False</code> if every element is distinct.'],
+    examples: [['nums = [1, 2, 3, 3]', 'True', '3 appears twice.'], ['nums = [1, 2, 3, 4]', 'False', 'All values are different.']],
+    call: 'Solution().hasDuplicate([1, 2, 3, 3])',
+    solutions: [
+      { id: 'brute', name: 'Brute force', time: 'O(n²)', space: 'O(1)', note: 'Compare every pair of positions.', code:
+`class Solution:
+    def hasDuplicate(self, nums: List[int]) -> bool:
+        for i in range(len(nums)):
+            for j in range(i + 1, len(nums)):
+                if nums[i] == nums[j]:
+                    return True
+        return False
+` },
+      { id: 'sort', name: 'Sorting', time: 'O(n log n)', space: 'O(1) or O(n)', note: 'After sorting, equal values sit next to each other.', code:
+`class Solution:
+    def hasDuplicate(self, nums: List[int]) -> bool:
+        nums.sort()
+        for i in range(1, len(nums)):
+            if nums[i] == nums[i - 1]:
+                return True
+        return False
+` },
+      { id: 'set', name: 'Hash set', time: 'O(n)', space: 'O(n)', note: 'Remember every value seen so far; a set answers “seen before?” in O(1).', code:
+`class Solution:
+    def hasDuplicate(self, nums: List[int]) -> bool:
+        seen = set()
+        for num in nums:
+            if num in seen:
+                return True
+            seen.add(num)
+        return False
+` },
+      { id: 'setlen', name: 'Hash set length', time: 'O(n)', space: 'O(n)', note: 'A set drops duplicates, so it is shorter than the list exactly when there is one.', code:
+`class Solution:
+    def hasDuplicate(self, nums: List[int]) -> bool:
+        unique = set(nums)
+        return len(unique) < len(nums)
+` },
+    ],
+  },
+  {
+    id: 'anagram', title: 'Valid Anagram', level: 'Easy',
+    desc: ['Given two strings <code>s</code> and <code>t</code>, return <code>True</code> if they contain exactly the same characters with the same counts, in any order.'],
+    examples: [['s = "racecar", t = "carrace"', 'True', ''], ['s = "jar", t = "jam"', 'False', '']],
+    call: 'Solution().isAnagram("racecar", "carrace")',
+    solutions: [
+      { id: 'sort', name: 'Sorting', time: 'O(n log n)', space: 'O(n)', note: 'Anagrams become identical once their characters are sorted.', code:
+`class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        if len(s) != len(t):
+            return False
+        a = sorted(s)
+        b = sorted(t)
+        return a == b
+` },
+      { id: 'map', name: 'Hash map', time: 'O(n)', space: 'O(k)', note: 'Count each character in both strings and compare the counts.', code:
+`class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        if len(s) != len(t):
+            return False
+        countS, countT = {}, {}
+        for i in range(len(s)):
+            countS[s[i]] = 1 + countS.get(s[i], 0)
+            countT[t[i]] = 1 + countT.get(t[i], 0)
+        return countS == countT
+` },
+    ],
+  },
+  {
+    id: 'twosum', title: 'Two Sum', level: 'Easy',
+    desc: ['Given an array <code>nums</code> and an integer <code>target</code>, return the indices <code>[i, j]</code> of the two numbers that add up to <code>target</code>, with <code>i &lt; j</code>. Exactly one answer exists.'],
+    examples: [['nums = [3, 4, 5, 6], target = 7', '[0, 1]', '3 + 4 = 7'], ['nums = [5, 5], target = 10', '[0, 1]', '']],
+    call: 'Solution().twoSum([3, 4, 5, 6], 7)',
+    solutions: [
+      { id: 'brute', name: 'Brute force', time: 'O(n²)', space: 'O(1)', note: 'Try every pair.', code:
+`class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        for i in range(len(nums)):
+            for j in range(i + 1, len(nums)):
+                if nums[i] + nums[j] == target:
+                    return [i, j]
+        return []
+` },
+      { id: 'map', name: 'Hash map', time: 'O(n)', space: 'O(n)', note: 'For each number, look up whether its complement was already seen.', code:
+`class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        prevMap = {}  # value -> index
+        for i, n in enumerate(nums):
+            diff = target - n
+            if diff in prevMap:
+                return [prevMap[diff], i]
+            prevMap[n] = i
+        return []
+` },
+    ],
+  },
+  {
+    id: 'stock', title: 'Best Time to Buy and Sell Stock', level: 'Easy',
+    desc: ['<code>prices[i]</code> is a stock’s price on day <code>i</code>. Choose one day to buy and a later day to sell. Return the maximum profit, or <code>0</code> if no profit is possible.'],
+    examples: [['prices = [10, 1, 5, 6, 7, 1]', '6', 'Buy at 1, sell at 7.'], ['prices = [10, 8, 7, 5, 2]', '0', '']],
+    call: 'Solution().maxProfit([10, 1, 5, 6, 7, 1])',
+    solutions: [
+      { id: 'brute', name: 'Brute force', time: 'O(n²)', space: 'O(1)', note: 'Try every buy day with every later sell day.', code:
+`class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        res = 0
+        for i in range(len(prices)):
+            buy = prices[i]
+            for j in range(i + 1, len(prices)):
+                res = max(res, prices[j] - buy)
+        return res
+` },
+      { id: 'window', name: 'Two pointers', time: 'O(n)', space: 'O(1)', note: 'l marks the cheapest day so far; r scans forward. A lower price moves l.', code:
+`class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        l, r = 0, 1
+        maxP = 0
+        while r < len(prices):
+            if prices[l] < prices[r]:
+                profit = prices[r] - prices[l]
+                maxP = max(maxP, profit)
+            else:
+                l = r
+            r += 1
+        return maxP
+` },
+    ],
+  },
+  {
+    id: 'parens', title: 'Valid Parentheses', level: 'Easy',
+    desc: ['Given a string of brackets <code>()[]{}</code>, return <code>True</code> if every opening bracket is closed by the same type, in the right order.'],
+    examples: [['s = "([{}])"', 'True', ''], ['s = "[(])"', 'False', 'The brackets interleave.']],
+    call: 'Solution().isValid("([{}])")',
+    solutions: [
+      { id: 'stack', name: 'Stack', time: 'O(n)', space: 'O(n)', note: 'Push openers; each closer must match the top of the stack.', code:
+`class Solution:
+    def isValid(self, s: str) -> bool:
+        stack = []
+        closeToOpen = {")": "(", "]": "[", "}": "{"}
+        for c in s:
+            if c in closeToOpen:
+                if stack and stack[-1] == closeToOpen[c]:
+                    stack.pop()
+                else:
+                    return False
+            else:
+                stack.append(c)
+        return not stack
+` },
+    ],
+  },
+  {
+    id: 'bsearch', title: 'Binary Search', level: 'Easy',
+    desc: ['Given a sorted array <code>nums</code> and a <code>target</code>, return the index of <code>target</code>, or <code>-1</code> if it is missing. The algorithm must run in O(log n).'],
+    examples: [['nums = [-1, 0, 2, 4, 6, 8], target = 4', '3', ''], ['nums = [-1, 0, 2, 4, 6, 8], target = 3', '-1', '']],
+    call: 'Solution().search([-1, 0, 2, 4, 6, 8], 4)',
+    solutions: [
+      { id: 'iter', name: 'Iterative', time: 'O(log n)', space: 'O(1)', note: 'Halve the search window [l, r] at each step.', code:
+`class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        l, r = 0, len(nums) - 1
+        while l <= r:
+            m = l + (r - l) // 2
+            if nums[m] > target:
+                r = m - 1
+            elif nums[m] < target:
+                l = m + 1
+            else:
+                return m
+        return -1
+` },
+      { id: 'rec', name: 'Recursive', time: 'O(log n)', space: 'O(log n)', note: 'Same halving, one recursive call per level. Watch the call stack grow.', code:
+`class Solution:
+    def binarySearch(self, l, r, nums, target):
+        if l > r:
+            return -1
+        m = l + (r - l) // 2
+        if nums[m] == target:
+            return m
+        if nums[m] < target:
+            return self.binarySearch(m + 1, r, nums, target)
+        return self.binarySearch(l, m - 1, nums, target)
+
+    def search(self, nums: List[int], target: int) -> int:
+        return self.binarySearch(0, len(nums) - 1, nums, target)
+` },
+    ],
+  },
+  {
+    id: 'stairs', title: 'Climbing Stairs', level: 'Easy',
+    desc: ['You climb a staircase of <code>n</code> steps, taking 1 or 2 steps at a time. How many distinct ways are there to reach the top?'],
+    examples: [['n = 3', '3', '1+1+1, 1+2, 2+1'], ['n = 5', '8', '']],
+    call: 'Solution().climbStairs(5)',
+    solutions: [
+      { id: 'memo', name: 'Recursion + memo', time: 'O(n)', space: 'O(n)', note: 'ways(i) = ways(i+1) + ways(i+2), each value computed once and cached.', code:
+`class Solution:
+    def climbStairs(self, n: int) -> int:
+        cache = [-1] * n
+
+        def dfs(i):
+            if i >= n:
+                return 1 if i == n else 0
+            if cache[i] != -1:
+                return cache[i]
+            cache[i] = dfs(i + 1) + dfs(i + 2)
+            return cache[i]
+
+        return dfs(0)
+` },
+      { id: 'dp', name: 'Bottom-up DP', time: 'O(n)', space: 'O(n)', note: 'Fill a table from the bottom: dp[i] = dp[i-1] + dp[i-2].', code:
+`class Solution:
+    def climbStairs(self, n: int) -> int:
+        if n <= 2:
+            return n
+        dp = [0] * (n + 1)
+        dp[1], dp[2] = 1, 2
+        for i in range(3, n + 1):
+            dp[i] = dp[i - 1] + dp[i - 2]
+        return dp[n]
+` },
+    ],
+  },
+  {
+    id: 'reverse', title: 'Reverse Linked List', level: 'Easy',
+    desc: ['Given the head of a singly linked list, reverse the list and return its new head.', 'In the Run line, <code>linked([...])</code> builds a list of <code>ListNode</code> from a Python list.'],
+    examples: [['head = 0 → 1 → 2 → 3', '3 → 2 → 1 → 0', ''], ['head = None', 'None', '']],
+    call: 'Solution().reverseList(linked([0, 1, 2, 3]))',
+    solutions: [
+      { id: 'iter', name: 'Iterative', time: 'O(n)', space: 'O(1)', note: 'Walk the list and point each node back at the previous one.', code:
+`class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        prev, curr = None, head
+        while curr:
+            temp = curr.next
+            curr.next = prev
+            prev = curr
+            curr = temp
+        return prev
+` },
+      { id: 'rec', name: 'Recursive', time: 'O(n)', space: 'O(n)', note: 'Reverse the rest of the list, then hook the current node at its end.', code:
+`class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head:
+            return None
+        newHead = head
+        if head.next:
+            newHead = self.reverseList(head.next)
+            head.next.next = head
+        head.next = None
+        return newHead
+` },
+    ],
+  },
+];
+
+const FREE = {
+  id: 'free', title: 'Free code', free: true,
+  desc: ['Write any Python and step through it. Read the <b>Input</b> box with <code>input()</code> or <code>sys.stdin</code>, one line per call.',
+    'Leave the <b>Run</b> line empty to trace the whole script, or write a call such as <code>solve([3, 1, 2])</code> to trace only that function.'],
+  examples: [], call: '',
+  stdin: '5\n3 1 4 1 5\n',
+  solutions: [{ id: 'main', name: 'Your code', code:
+`# Write any Python here. input() reads the Input box line by line.
+n = int(input())
+nums = list(map(int, input().split()))
+
+best = nums[0]
+for i in range(1, n):
+    if nums[i] > best:
+        best = nums[i]
+print("max:", best)
+` }],
+};
+const ALL = [FREE, ...PROBLEMS];
+
+/* ---------- state ---------- */
+let py = null, pyRun = null, busy = false;
+let steps = [], cur = 0, runLines = [], stale = false, playTimer = null;
+let speed = Number(store.get('as.speed')) || 1;
+let prob = ALL.find(p => p.id === store.get('as.problem')) || PROBLEMS[0];
+let sol = null;
+
+const codeEl = $('#code'), callEl = $('#call'), stdinEl = $('#stdin'), hlEl = $('.hl');
+const setStatus = (kind, text) => { const el = $('#status'); el.className = 'status ' + kind; el.textContent = text; };
+const codeKey = () => `as.code.${prob.id}.${sol.id}`, callKey = () => `as.call.${prob.id}`;
+
+/* ---------- python ---------- */
+async function boot(){
+  try{
+    if(typeof WebAssembly === 'undefined') throw new Error('this browser lacks WebAssembly support.');
+    const { loadPyodide } = await import(PYODIDE_URL);
+    py = await loadPyodide();
+    const ns = py.globals.get('dict')();
+    py.runPython($('#py-tracer').textContent, { globals: ns });
+    pyRun = ns.get('run');
+    const v = py.runPython('import sys; sys.version.split()[0]');
+    setStatus('ready', `Python ${v} ready`);
+    $('#runBtn').disabled = false;
+    run();
+  }catch(e){
+    console.error(e);
+    setStatus('error', 'Python couldn’t start: ' + (e.message || e));
+    $('#vizEmpty').textContent = 'Python couldn’t start. Check your connection: the Pyodide runtime loads from jsDelivr.';
+  }
+}
+
+async function run(){
+  if(!pyRun || busy) return;
+  busy = true; stopPlay(); $('#runBtn').disabled = true;
+  const code = codeEl.value, call = callEl.value, stdin = prob.free ? stdinEl.value : '';
+  let res;
+  await new Promise(r => setTimeout(r, 15));
+  try{ res = JSON.parse(pyRun(code, call, MAX_STEPS, stdin)); }
+  catch(e){ res = { status: 'error', steps: [{ ev: 'error', msg: String(e.message || e) }] }; }
+  runLines = code.split('\n');
+  steps = res.steps;
+  prepare();
+  stale = false;
+  busy = false; $('#runBtn').disabled = false;
+  const nl = steps.filter(s => s.ev === 'line').length;
+  $('#summary').textContent = res.status === 'limit' ? `stopped at ${MAX_STEPS.toLocaleString('en')} steps` : `${nl.toLocaleString('en')} line${nl === 1 ? '' : 's'} executed`;
+  $('#vizEmpty').hidden = true; $('#stepWrap').hidden = false; $('#scrubRow').hidden = false; $('#stale').hidden = true;
+  $('#scrub').max = String(steps.length - 1);
+  show(res.status === 'error' ? steps.length - 1 : 0);
+}
+
+/* attach frame context, the comparison base and line hit counts to each step */
+function prepare(){
+  let last = null, lines = 0;
+  const lastAt = {}, hits = {};
+  for(const s of steps){
+    if(s.vars === undefined && last){ s.vars = last.vars; s.stack = last.stack; s.depth = last.depth; s.fn = last.fn; if(s.line == null) s.line = last.line; }
+    s.vars = s.vars || {}; s.stack = s.stack || []; s.depth = s.depth || 0;
+    s.enter = !last || (s.depth > last.depth && s.ev !== 'error');
+    if(s.enter) for(const d of Object.keys(lastAt)) if(+d >= s.depth) delete lastAt[d];
+    const b = lastAt[s.depth];
+    s.base = b && b.fn === s.fn ? b : null;
+    if(s.ev === 'line'){ hits[s.line] = (hits[s.line] || 0) + 1; s.hit = hits[s.line]; lines++; }
+    s.lines = lines;
+    lastAt[s.depth] = s; last = s;
+  }
+}
+
+/* ---------- python value formatting ---------- */
+const pyStr = v => { const q = v.includes("'") && !v.includes('"') ? '"' : "'"; return q + v.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\t/g, '\\t').split(q).join('\\' + q) + q; };
+function pr(e){
+  if(!e) return '?';
+  const more = (n, len) => n > len ? ', …' : '';
+  switch(e.t){
+    case 'none': return 'None';
+    case 'bool': return e.v ? 'True' : 'False';
+    case 'int': return String(e.v);
+    case 'float': return e.v;
+    case 'str': return pyStr(e.v) + (e.n > e.v.length ? '…' : '');
+    case 'list': return '[' + e.v.map(pr).join(', ') + more(e.n, e.v.length) + ']';
+    case 'tuple': return '(' + e.v.map(pr).join(', ') + (e.v.length === 1 ? ',' : '') + more(e.n, e.v.length) + ')';
+    case 'deque': return 'deque([' + e.v.map(pr).join(', ') + more(e.n, e.v.length) + '])';
+    case 'set': return e.n ? '{' + e.v.map(pr).join(', ') + more(e.n, e.v.length) + '}' : 'set()';
+    case 'dict': return (e.cls ? e.cls + '(' : '') + '{' + e.v.map(([k, v]) => pr(k) + ': ' + pr(v)).join(', ') + more(e.n, e.v.length) + '}' + (e.cls ? ')' : '');
+    case 'chain': return e.v.map(pr).join(' → ') + (e.cycle != null ? ' ↺' : e.more ? ' → …' : ' → None');
+    case 'obj': return e.cls + '(' + e.v.map(([k, v]) => k + '=' + pr(v)).join(', ') + ')';
+    case 'more': return '…';
+    default: return String(e.v);
+  }
+}
+const short = (s, n = 70) => s.length > n ? s.slice(0, n - 1) + '…' : s;
+const J = x => JSON.stringify(x);
+const eq = (a, b) => J(a) === J(b);
+const isSeq = e => e && (e.t === 'list' || e.t === 'tuple' || e.t === 'deque');
+const isScalar = e => e && ['none', 'bool', 'int', 'float', 'more', 'repr'].includes(e.t);
+const C = s => `<code>${esc(s)}</code>`;
+
+/* ---------- describing what changed ---------- */
+function diffVal(name, a, b, out){
+  if(eq(a, b)) return;
+  if(!a){ out.push(['chg', `${C(name)} = ${C(short(pr(b)))}`]); return; }
+  if(isSeq(a) && isSeq(b) && a.t === b.t){
+    const la = a.v.length, lb = b.v.length;
+    const pre = (x, y, n) => eq(x.slice(0, n), y.slice(0, n));
+    if(lb === la + 1 && pre(a.v, b.v, la)){ out.push(['chg', `${C(name)} appended ${C(short(pr(b.v[lb - 1])))}`]); return; }
+    if(lb === la - 1 && pre(a.v, b.v, lb)){ out.push(['chg', `${C(name)} popped ${C(short(pr(a.v[la - 1])))}`]); return; }
+    if(lb === la - 1 && eq(a.v.slice(1), b.v)){ out.push(['chg', `${C(name)} removed ${C(short(pr(a.v[0])))} from the front`]); return; }
+    if(lb === la + 1 && eq(a.v, b.v.slice(1))){ out.push(['chg', `${C(name)} got ${C(short(pr(b.v[0])))} at the front`]); return; }
+    if(la === lb){
+      const ch = [];
+      for(let i = 0; i < la; i++) if(!eq(a.v[i], b.v[i])) ch.push(i);
+      const sortedKey = v => v.map(J).sort().join('|');
+      if(ch.length > 3 && sortedKey(a.v) === sortedKey(b.v)){ out.push(['chg', `${C(name)} reordered to ${C(short(pr(b)))}`]); return; }
+      if(ch.length <= 3){
+        for(const i of ch){
+          if(isSeq(a.v[i]) && isSeq(b.v[i])) diffVal(`${name}[${i}]`, a.v[i], b.v[i], out);
+          else out.push(['chg', `${C(`${name}[${i}]`)}: ${C(short(pr(a.v[i]), 30))} → ${C(short(pr(b.v[i]), 30))}`]);
+        }
+        return;
+      }
+    }
+  }else if(a.t === 'set' && b.t === 'set'){
+    const A = new Set(a.v.map(J)), B = new Set(b.v.map(J));
+    const add = b.v.filter(x => !A.has(J(x))), rem = a.v.filter(x => !B.has(J(x)));
+    if(add.length + rem.length <= 4){
+      for(const x of add) out.push(['chg', `${C(name)} gained ${C(short(pr(x), 30))}`]);
+      for(const x of rem) out.push(['chg', `${C(name)} lost ${C(short(pr(x), 30))}`]);
+      return;
+    }
+  }else if(a.t === 'dict' && b.t === 'dict'){
+    const A = new Map(a.v.map(([k, v]) => [J(k), v])), B = new Map(b.v.map(([k, v]) => [J(k), v]));
+    const ch = [];
+    for(const [k, v] of b.v){ const o = A.get(J(k)); if(o === undefined) ch.push(`${C(`${name}[${pr(k)}]`)} = ${C(short(pr(v), 30))} (new key)`); else if(!eq(o, v)) ch.push(`${C(`${name}[${pr(k)}]`)}: ${C(short(pr(o), 30))} → ${C(short(pr(v), 30))}`); }
+    for(const [k] of a.v) if(!B.has(J(k))) ch.push(`${C(name)} lost key ${C(pr(k))}`);
+    if(ch.length <= 4){ ch.forEach(h => out.push(['chg', h])); return; }
+  }else if(a.t === 'obj' && b.t === 'obj' && a.cls === b.cls){
+    const A = Object.fromEntries(a.v);
+    for(const [k, v] of b.v) diffVal(`${name}.${k}`, A[k], v, out);
+    return;
+  }
+  if(isScalar(a) && isScalar(b) || (a.t === 'str' && b.t === 'str')) out.push(['chg', `${C(name)}: ${C(short(pr(a), 30))} → ${C(short(pr(b), 30))}`]);
+  else out.push(['chg', `${C(name)} is now ${C(short(pr(b)))}`]);
+}
+
+function notesFor(s){
+  const out = [];
+  if(s.ev === 'error'){ out.push(['err', esc(s.msg)]); return out; }
+  if(s.ev === 'limit'){ out.push(['err', esc(`Stopped after ${s.max.toLocaleString('en')} steps. The code may loop forever, or the input is too large to trace.`)]); return out; }
+  if(s.enter && s.ev !== 'done'){
+    const args = Object.entries(s.vars).map(([k, v]) => `${k}=${short(pr(v), 40)}`).join(', ');
+    out.push(['', `${s.depth > 1 ? 'Called' : 'Start:'} ${C(`${s.fn}(${args})`)}`]);
+  }else if(s.base){
+    const vb = s.base.vars, va = s.vars, ch = [];
+    for(const [k, v] of Object.entries(va)) diffVal(k, vb[k], v, ch);
+    out.push(...ch.slice(0, 8));
+    if(ch.length > 8) out.push(['chg', `…and ${ch.length - 8} more changes`]);
+    if(!ch.length && s.base.ev === 'line' && s.ev === 'line') out.push(['', `Line ${s.base.line} ran without changing any variable.`]);
+  }
+  if(s.cond != null){
+    const kw = (runLines[s.line - 1] || '').trim().split(/\s/)[0];
+    const what = kw === 'while' ? (s.cv ? 'the loop body runs' : 'the loop ends') : (s.cv ? 'its block runs' : 'its block is skipped');
+    out.push([s.cv ? 'c-true' : 'c-false', `Condition ${C(s.cond)} is <span class="tf ${s.cv ? 't' : 'f'}">${s.cv ? 'True' : 'False'}</span>, so ${what}.`]);
+  }
+  if(s.ev === 'return') out.push(['ret', `${C(s.fn + '()')} returns ${C(short(pr(s.ret)))} to its caller.`]);
+  if(s.ev === 'done') out.push(['ret', s.ret ? `Finished. The call returned ${C(short(pr(s.ret), 120))} after ${s.lines.toLocaleString('en')} executed lines.` : `Finished after ${s.lines.toLocaleString('en')} executed lines.`]);
+  return out;
+}
+
+/* ---------- rendering the program state ---------- */
+const PTR = /^(i|j|k|l|r|m|lo|hi|low|high|mid|left|right|start|end|idx|index|p|q|p1|p2|slow|fast|ptr|pos|L|R|row|col)$/;
+function pointerMap(vars){ return Object.entries(vars).filter(([k, v]) => v.t === 'int' && typeof v.v === 'number' && PTR.test(k)); }
+
+function cellsHtml(items, baseItems, ptrs, opts = {}){
+  const n = items.length;
+  const at = {};
+  for(const [k, v] of ptrs) if(v.v >= 0 && v.v <= n) (at[v.v] = at[v.v] || []).push(k);
+  let h = '<div class="row">';
+  items.forEach((x, i) => {
+    let cls = 'cell';
+    if(baseItems){ if(i >= baseItems.length) cls += ' new'; else if(!eq(baseItems[i], x)) cls += ' chg'; }
+    if(at[i]) cls += ' focus';
+    const txt = opts.chars ? esc(x) : esc(short(pr(x), 24));
+    h += `<div class="cellw"><span class="idx">${i}</span><div class="${cls}">${txt}</div><span class="ptrs">${(at[i] || []).map(p => `<i>${esc(p)}</i>`).join('')}</span></div>`;
+  });
+  if(at[n] && !opts.more) h += `<div class="cellw"><span class="idx">${n}</span><div class="cell ghost">·</div><span class="ptrs">${at[n].map(p => `<i>${esc(p)}</i>`).join('')}</span></div>`;
+  if(opts.more) h += `<div class="cellw"><span class="idx">&nbsp;</span><div class="cell ghost">…</div></div>`;
+  if(!n) h += '<span class="emptyv">empty</span>';
+  return h + '</div>';
+}
+
+function typeLabel(e){
+  if(e.t === 'str') return `str · ${e.n}`;
+  if(e.t === 'chain') return e.cls;
+  if(e.t === 'obj') return e.cls;
+  if(e.t === 'dict') return `${e.cls || 'dict'} · ${e.n}`;
+  return `${e.t} · ${e.n}`;
+}
+
+function varHtml(name, e, base, ptrs, labels){
+  const isNew = base === undefined;
+  const head = `<div class="vname${isNew ? ' new' : ''}">${esc(name)}<small>${esc(typeLabel(e))}</small></div>`;
+  const changed = base && !eq(base, e) ? ' chg' : '';
+  if(isSeq(e)){
+    if(e.v.length && e.v.every(r => isSeq(r)) && e.v.every(r => r.v.length <= 40)){
+      const cols = Math.max(...e.v.map(r => r.v.length));
+      const P = Object.fromEntries(ptrs);
+      const fr = P.r ?? P.row ?? P.i, fc = P.c ?? P.col ?? P.j;
+      let h = `<table class="grid"><tr><th></th>${Array.from({ length: cols }, (_, c) => `<th>${c}</th>`).join('')}</tr>`;
+      e.v.forEach((r, ri) => {
+        h += `<tr><th>${ri}</th>`;
+        for(let c = 0; c < cols; c++){
+          const x = r.v[c], bx = base && isSeq(base) && base.v[ri] && base.v[ri].v ? base.v[ri].v[c] : undefined;
+          const cls = (fr && fc && fr.v === ri && fc.v === c) ? 'focus' : (base && x !== undefined && !eq(bx, x) ? 'chg' : '');
+          h += `<td class="${cls}">${x === undefined ? '' : esc(short(pr(x), 12))}</td>`;
+        }
+        h += '</tr>';
+      });
+      return `<div class="var">${head}<div style="overflow:auto">${h}</table></div></div>`;
+    }
+    return `<div class="var">${head}${cellsHtml(e.v, base && isSeq(base) ? base.v : null, ptrs, { more: e.n > e.v.length })}</div>`;
+  }
+  if(e.t === 'str'){
+    return `<div class="var">${head}${cellsHtml([...e.v], base && base.t === 'str' ? [...base.v] : null, ptrs, { chars: true })}</div>`;
+  }
+  if(e.t === 'set'){
+    const B = base && base.t === 'set' ? new Set(base.v.map(J)) : null;
+    const chips = e.v.map(x => `<span class="chip${B && !B.has(J(x)) ? ' new' : ''}">${esc(short(pr(x), 30))}</span>`).join('');
+    return `<div class="var">${head}<div class="chips">${chips || '<span class="emptyv">empty set</span>'}${e.n > e.v.length ? '<span class="chip">…</span>' : ''}</div></div>`;
+  }
+  if(e.t === 'dict'){
+    const B = base && base.t === 'dict' ? new Map(base.v.map(([k, v]) => [J(k), v])) : null;
+    const kvs = e.v.map(([k, v]) => {
+      let cls = 'kv';
+      if(B){ const o = B.get(J(k)); if(o === undefined) cls += ' new'; else if(!eq(o, v)) cls += ' chg'; }
+      return `<div class="${cls}"><span>${esc(short(pr(k), 24))}</span><span>${esc(short(pr(v), 24))}</span></div>`;
+    }).join('');
+    return `<div class="var">${head}<div class="kvs">${kvs || '<span class="emptyv">empty</span>'}</div></div>`;
+  }
+  if(e.t === 'chain'){
+    let h = '<div class="chain">';
+    e.v.forEach((x, i) => {
+      const lb = (labels.byId[e.ids[i]] || []).filter(n => n !== labels.self);
+      h += `<div class="nodew"><div class="node${changed}">${esc(short(pr(x), 16))}</div><span class="ptrs">${lb.map(p => `<i>${esc(p)}</i>`).join('')}</span></div><span class="arr">→</span>`;
+    });
+    h += e.cycle != null ? `<span class="nil">back to node ${e.cycle}</span>` : e.more ? '<span class="nil">…</span>' : '<span class="nil">None</span>';
+    return `<div class="var">${head}${h}</div></div>`;
+  }
+  if(e.t === 'obj'){
+    const bf = base && base.t === 'obj' ? Object.fromEntries(base.v) : null;
+    const inner = stateHtml(Object.fromEntries(e.v), bf, { prefix: name + '.', nested: true });
+    return `<div class="var">${head}<div class="obj">${inner || '<span class="emptyv">no attributes</span>'}</div></div>`;
+  }
+  return '';
+}
+
+function stateHtml(vars, baseVars, opts = {}){
+  const ptrs = pointerMap(vars);
+  const ptrNames = new Set(ptrs.map(p => p[0]));
+  const entries = Object.entries(vars);
+  // linked lists: a list fully contained in another one becomes a label on that list's node
+  const chains = entries.filter(([, v]) => v.t === 'chain' && v.ids.length);
+  const byId = {}, hidden = new Set();
+  chains.forEach(([k, v], idx) => {
+    (byId[v.ids[0]] = byId[v.ids[0]] || []).push(k);
+    const host = chains.some(([k2, v2], j) => k2 !== k && !hidden.has(k2) && v2.ids.includes(v.ids[0]) && (v2.ids.length > v.ids.length || j < idx));
+    if(host) hidden.add(k);
+  });
+  let sc = '', big = '';
+  for(const [k, v] of entries){
+    const b = baseVars ? baseVars[k] : undefined;
+    const isStrCells = v.t === 'str' && v.n >= 2 && v.n <= 40 && !v.v.includes('\n');
+    const small = isScalar(v) || (v.t === 'str' && !isStrCells) || (v.t === 'tuple' && v.n <= 3 && v.v.every(isScalar)) || (v.t === 'chain' && !v.ids.length);
+    if(small){
+      let cls = 'sc';
+      if(ptrNames.has(k)) cls += ' ptr';
+      if(baseVars){ if(b === undefined) cls += ' new'; else if(!eq(b, v)) cls += ' chg'; }
+      sc += `<span class="${cls}"><span class="nm">${esc((opts.prefix || '') + k)}</span><span class="vl">${esc(short(pr(v), 90))}</span></span>`;
+    }else if(!hidden.has(k)){
+      big += varHtml((opts.prefix || '') + k, v, baseVars ? b : null, ptrs, { byId, self: k });
+    }
+  }
+  return (sc ? `<div class="scalars">${sc}</div>` : '') + big;
+}
+
+/* ---------- step display ---------- */
+function show(i){
+  if(!steps.length) return;
+  cur = Math.max(0, Math.min(steps.length - 1, i));
+  const s = steps[cur];
+  $('#scrub').value = String(cur);
+  $('#stepOf').textContent = `Step ${cur + 1} of ${steps.length}`;
+  const lineText = s.line ? (runLines[s.line - 1] || '').trim() : '';
+  const t = $('#stTitle');
+  t.className = s.ev === 'error' || s.ev === 'limit' ? 'bad' : '';
+  t.textContent = s.ev === 'done' ? 'Done' : s.ev === 'limit' ? 'Step limit reached' : s.ev === 'error' ? (s.msg.trim().split('\n').pop().split(':')[0] || 'Error') : s.ev === 'return' ? `${s.fn}() returns ${short(pr(s.ret), 60)}` : lineText;
+  let meta = '';
+  if(s.ev === 'line') meta = `Line ${s.line} · about to run${s.hit > 1 ? ` · run ${s.hit} of this line` : ''}`;
+  else if(s.ev === 'return') meta = `Line ${s.line} · leaving ${s.fn}()`;
+  else if(s.ev === 'error') meta = s.line ? `Raised on line ${s.line}` : 'Raised before any line ran';
+  meta += `${meta ? ' · ' : ''}${s.lines.toLocaleString('en')} line${s.lines === 1 ? '' : 's'} executed so far`;
+  $('#stMeta').textContent = meta;
+  $('#stNotes').innerHTML = notesFor(s).map(([c, h]) => `<li class="${c}">${h}</li>`).join('');
+
+  let h = '';
+  if(s.ev === 'done' && s.ret) h += `<div class="var"><div class="sec-title">Result</div></div><div class="result">${esc(short(pr(s.ret), 400))}</div>`;
+  if(s.ev === 'error') h += `<div class="result bad">${esc(s.msg)}</div>`;
+  if(s.stack.length > 1){
+    h += `<div class="sec-title">Call stack</div><div class="stackl">${s.stack.map(([fn, ln], k) => `${k ? '<span class="sep">›</span>' : ''}<span class="frame${k === s.stack.length - 1 ? ' top' : ''}">${esc(fn)}<span class="idx"> :${ln}</span></span>`).join('')}</div>`;
+  }
+  const vs = stateHtml(s.vars, s.base ? s.base.vars : null);
+  h += `<div class="sec-title">${s.stack.length ? `Variables in ${esc(s.fn === '<module>' ? 'the script' : s.fn + '()')}` : 'Variables'}</div>` + (vs || '<span class="emptyv">No variables yet.</span>');
+  if(s.out) h += `<div class="sec-title">Printed output</div><pre class="out">${esc(s.out)}</pre>`;
+  $('#state').innerHTML = h;
+  paintCode(true);
+}
+
+/* ---------- editor ---------- */
+const PY_KW = new Set('False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case self'.split(' '));
+const PY_TY = new Set('int str float bool list dict set tuple frozenset bytes object List Dict Set Tuple Optional Deque ListNode TreeNode'.split(' '));
+const PY_RE = /(#[^\n]*)|([rRbBfFuU]{0,2}(?:"""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|"(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?))|(\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?j?\b)|([A-Za-z_]\w*)(?=\s*\()|([A-Za-z_]\w*)|([-+*/%=<>!&|^~@:]+)/g;
+function tokens(t){
+  const out = []; let last = 0, m;
+  PY_RE.lastIndex = 0;
+  while((m = PY_RE.exec(t))){
+    if(m[0] === ''){ PY_RE.lastIndex++; continue; }
+    if(m.index > last) out.push(['', t.slice(last, m.index)]);
+    let cls = '';
+    if(m[1]) cls = 'c'; else if(m[2]) cls = 's'; else if(m[3]) cls = 'n';
+    else if(m[4]) cls = PY_KW.has(m[4]) ? 'k' : PY_TY.has(m[4]) ? 't' : 'f';
+    else if(m[5]) cls = PY_KW.has(m[5]) ? 'k' : PY_TY.has(m[5]) || /^[A-Z]/.test(m[5]) ? 't' : '';
+    else if(m[6]) cls = 'o';
+    out.push([cls, m[0]]);
+    last = m.index + m[0].length;
+  }
+  if(last < t.length) out.push(['', t.slice(last)]);
+  return out;
+}
+function paintCode(follow){
+  const deco = {};
+  const s = steps[cur];
+  if(s && !stale && s.line){
+    if(s.ev === 'error' || s.ev === 'limit') deco[s.line] = 'err';
+    else{
+      deco[s.line] = 'cur';
+      if(s.base && s.base.ev === 'line' && s.base.line !== s.line) deco[s.base.line] = 'prev';
+    }
+  }
+  const lines = [[]];
+  for(const [cls, txt] of tokens(codeEl.value)){
+    txt.split('\n').forEach((part, k) => {
+      if(k) lines.push([]);
+      if(part) lines[lines.length - 1].push(cls ? `<span class="${cls}">${esc(part)}</span>` : esc(part));
+    });
+  }
+  hlEl.innerHTML = lines.map((l, k) => `<span class="ln${deco[k + 1] ? ' ' + deco[k + 1] : ''}" data-n="${k + 1}">${l.join('') || ' '}</span>`).join('');
+  if(follow && s && s.line && !stale){
+    const lh = parseFloat(getComputedStyle(codeEl).lineHeight) || 21.6;
+    const top = 12 + (s.line - 1) * lh;
+    if(top < codeEl.scrollTop + lh || top > codeEl.scrollTop + codeEl.clientHeight - 2 * lh) codeEl.scrollTop = Math.max(0, top - codeEl.clientHeight / 3);
+  }
+  hlEl.scrollTop = codeEl.scrollTop; hlEl.scrollLeft = codeEl.scrollLeft;
+}
+
+/* ---------- problems and solutions ---------- */
+function renderProblem(){
+  const opt = p => `<option value="${p.id}"${p === prob ? ' selected' : ''}>${esc(p.title)}</option>`;
+  $('#problemSel').innerHTML = `<optgroup label="Playground">${opt(FREE)}</optgroup><optgroup label="Problems">${PROBLEMS.map(opt).join('')}</optgroup>`;
+  $('#desc').innerHTML = `<h3>${esc(prob.title)}${prob.level ? ` <span class="level ${prob.level}">${prob.level}</span>` : ''}</h3>` + prob.desc.map(d => `<p>${d}</p>`).join('');
+  $('.problem').classList.toggle('free', !!prob.free);
+  $('#examples').hidden = !!prob.free;
+  $('#stdinRow').hidden = !prob.free;
+  $('#cx').hidden = !!prob.free;
+  stdinEl.value = store.get('as.stdin') ?? (FREE.stdin || '');
+  callEl.placeholder = prob.free ? 'Optional: a call to trace, such as solve([3, 1, 2]). Empty runs the whole script.' : '';
+  $('#examples').innerHTML = prob.examples.map(([inp, out, why], k) => `<div class="ex-item"><span>Example ${k + 1}:</span> ${esc(inp)}<br><span>Output:</span> ${esc(out)}${why ? `<div class="why">${esc(why)}</div>` : ''}</div>`).join('');
+  sol = prob.solutions.find(x => x.id === store.get(`as.sol.${prob.id}`)) || prob.solutions[0];
+  callEl.value = store.get(callKey()) ?? prob.call;
+  renderSolution();
+}
+function renderSolution(){
+  $('#tabs').innerHTML = prob.solutions.map(x => `<button type="button" role="tab" class="tab" data-id="${x.id}" aria-selected="${x === sol}">${esc(x.name)}</button>`).join('');
+  if(!prob.free) $('#cx').innerHTML = `Time <b>${esc(sol.time)}</b> Space <b>${esc(sol.space)}</b><span class="note">${esc(sol.note)}</span>`;
+  codeEl.value = store.get(codeKey()) ?? sol.code;
+  codeEl.scrollTop = 0;
+  markStale();
+  paintCode(false);
+}
+function markStale(){
+  if(!steps.length) return;
+  stale = true; stopPlay();
+  $('#stale').hidden = false;
+}
+
+/* ---------- playback ---------- */
+function stopPlay(){ if(playTimer){ clearTimeout(playTimer); playTimer = null; $('#play').textContent = 'Play'; } }
+function togglePlay(){
+  if(playTimer){ stopPlay(); return; }
+  if(!steps.length || stale) return;
+  $('#play').textContent = 'Pause';
+  if(cur >= steps.length - 1) show(0);
+  const tick = () => { playTimer = setTimeout(() => { if(cur >= steps.length - 1){ stopPlay(); return; } show(cur + 1); tick(); }, 850 * speed); };
+  tick();
+}
+
+/* ---------- wiring ---------- */
+$('#problemSel').addEventListener('change', e => { prob = ALL.find(p => p.id === e.target.value); store.set('as.problem', prob.id); renderProblem(); run(); });
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab'); if(!b) return;
+  sol = prob.solutions.find(x => x.id === b.dataset.id); store.set(`as.sol.${prob.id}`, sol.id);
+  renderSolution(); run();
+});
+$('#resetBtn').addEventListener('click', () => {
+  store.del(codeKey()); store.del(callKey()); callEl.value = prob.call;
+  if(prob.free){ store.del('as.stdin'); stdinEl.value = FREE.stdin; }
+  renderSolution(); run();
+});
+$('#runBtn').addEventListener('click', run);
+$('#first').addEventListener('click', () => { stopPlay(); show(0); });
+$('#last').addEventListener('click', () => { stopPlay(); show(steps.length - 1); });
+$('#prev').addEventListener('click', () => { stopPlay(); show(cur - 1); });
+$('#next').addEventListener('click', () => { stopPlay(); show(cur + 1); });
+$('#play').addEventListener('click', togglePlay);
+$('#scrub').addEventListener('input', e => { stopPlay(); show(+e.target.value); });
+$('#speed').value = String(speed);
+if(!$('#speed').value){ $('#speed').value = '1'; speed = 1; }
+$('#speed').addEventListener('change', e => { speed = Number(e.target.value) || 1; store.set('as.speed', String(speed)); });
+codeEl.addEventListener('input', () => { store.set(codeKey(), codeEl.value); markStale(); paintCode(false); });
+codeEl.addEventListener('scroll', () => { hlEl.scrollTop = codeEl.scrollTop; hlEl.scrollLeft = codeEl.scrollLeft; });
+callEl.addEventListener('input', () => { store.set(callKey(), callEl.value); markStale(); });
+stdinEl.addEventListener('input', () => { store.set('as.stdin', stdinEl.value); markStale(); });
+for(const el of [codeEl, callEl, stdinEl]){
+  el.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && (e.ctrlKey || e.metaKey || el === callEl)){ e.preventDefault(); run(); }
+    else if(el === codeEl && e.key === 'Tab' && !e.shiftKey && !e.altKey){
+      e.preventDefault();
+      el.setRangeText('    ', el.selectionStart, el.selectionEnd, 'end');
+      el.dispatchEvent(new Event('input'));
+    }
+  });
+}
+document.addEventListener('keydown', e => {
+  if(/^(TEXTAREA|INPUT|SELECT)$/.test(document.activeElement?.tagName) || !steps.length || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(e.key === 'ArrowRight'){ e.preventDefault(); stopPlay(); show(cur + 1); }
+  else if(e.key === 'ArrowLeft'){ e.preventDefault(); stopPlay(); show(cur - 1); }
+  else if(e.key === 'Home'){ stopPlay(); show(0); }
+  else if(e.key === 'End'){ stopPlay(); show(steps.length - 1); }
+  else if(e.key === ' ' && document.activeElement === document.body){ e.preventDefault(); togglePlay(); }
+});
+
+renderProblem();
+boot();
+</script>
+</body>
+</html>
