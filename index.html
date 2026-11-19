@@ -185,6 +185,15 @@ select.btn{padding-right:8px;max-width:300px}
 .state{padding:14px 18px 18px;display:grid;gap:14px}
 .sec-title{font:600 12px/1 var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 -4px}
 .scalars{display:flex;flex-wrap:wrap;gap:8px}
+.sc,.var{position:relative}
+.hide{position:absolute;top:-7px;right:-7px;width:18px;height:18px;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);font:600 13px/1 var(--sans);cursor:pointer;opacity:0;transition:opacity .12s}
+.var>.hide{top:0;right:0}
+.sc:hover>.hide,.var:hover>.hide,.hide:focus-visible{opacity:1}
+.hide:hover{color:var(--ink);border-color:var(--muted)}
+@media (hover:none){ .hide{opacity:1} }
+.hiddenbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.hiddenbar button{border:1px dashed var(--line);background:transparent;border-radius:999px;padding:2px 9px;font:12.5px/1.4 var(--mono);color:var(--muted);cursor:pointer}
+.hiddenbar button:hover{color:var(--ink);border-color:var(--muted)}
 .sc{border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:13.5px/1.4 var(--mono);background:var(--panel);display:inline-flex;gap:8px;align-items:baseline;max-width:100%}
 .sc .nm{color:var(--muted)}
 .sc .vl{overflow-wrap:anywhere}
@@ -232,11 +241,8 @@ select.btn{padding-right:8px;max-width:300px}
 .out{margin:0;background:var(--soft);border:1px solid var(--line-soft);border-radius:8px;padding:10px 12px;font:12.5px/1.5 var(--mono);white-space:pre-wrap;max-height:180px;overflow:auto}
 .result{border:1px solid var(--good);background:var(--good-bg);border-radius:8px;padding:10px 14px;font:600 15px/1.4 var(--mono)}
 .result.bad{border-color:var(--bad);background:var(--bad-bg);color:var(--bad);font-weight:500;font-size:13px;white-space:pre-wrap}
-.opt{display:inline-flex;align-items:center;gap:5px;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
-.opt input{margin:0;accent-color:var(--ptr)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted);padding:0 18px 14px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
-.legend span[hidden]{display:none}
 .legend i{width:13px;height:13px;border-radius:3px;border:1px solid}
 .legend .l1 i{background:var(--chg-bg);border-color:var(--chg)}
 .legend .l2 i{background:var(--good-bg);border-color:var(--good)}
@@ -310,7 +316,6 @@ select.btn{padding-right:8px;max-width:300px}
           <option value="0.45">Fast</option>
           <option value="0.15">Very fast</option>
         </select>
-        <label class="opt" title="Show index variables (i, j, l, r, mid…) under list cells"><input type="checkbox" id="showPtrs"> Pointers</label>
         <span class="of" id="stepOf"></span>
       </div>
       <div class="scrub" id="scrubRow" hidden><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"></div>
@@ -323,7 +328,7 @@ select.btn{padding-right:8px;max-width:300px}
           <ul class="notes" id="stNotes"></ul>
         </div>
         <div class="state" id="state"></div>
-        <div class="legend"><span class="l4"><i></i>Line that just ran</span><span class="l5"><i></i>Next line</span><span class="l1"><i></i>Changed by the last line</span><span class="l2"><i></i>Added</span><span class="l3" id="ptrLegend"><i></i>Index pointer</span></div>
+        <div class="legend"><span class="l4"><i></i>Line that just ran</span><span class="l5"><i></i>Next line</span><span class="l1"><i></i>Changed by the last line</span><span class="l2"><i></i>Added</span><span class="l3"><i></i>Index pointer</span></div>
       </div>
     </div>
   </section>
@@ -961,8 +966,10 @@ const ALL = [FREE, ...PROBLEMS];
 let py = null, pyRun = null, busy = false;
 let steps = [], cur = 0, runLines = [], stale = false, playTimer = null;
 let speed = Number(store.get('as.speed')) || 1;
-let showPtrs = store.get('as.pointers') !== '0';
 let prob = ALL.find(p => p.id === store.get('as.problem')) || FREE;
+const loadHidden = () => { try{ return new Set(JSON.parse(store.get('as.hidden.' + prob.id)) || []); }catch{ return new Set(); } };
+const saveHidden = () => hiddenVars.size ? store.set('as.hidden.' + prob.id, JSON.stringify([...hiddenVars])) : store.del('as.hidden.' + prob.id);
+let hiddenVars = loadHidden();
 let cases = [], caseIdx = 0, traces = [], entry = null, entrySig = '';
 let sol = null;
 
@@ -1180,9 +1187,11 @@ function typeLabel(e){
   return `${e.t} · ${e.n}`;
 }
 
+const hideBtn = name => `<button class="hide" type="button" data-hide="${esc(name)}" aria-label="Hide ${esc(name)}" title="Hide ${esc(name)}">−</button>`;
+
 function varHtml(name, e, base, ptrs, labels){
   const isNew = base === undefined;
-  const head = `<div class="vname${isNew ? ' new' : ''}">${esc(name)}<small>${esc(typeLabel(e))}</small></div>`;
+  const head = `<div class="vname${isNew ? ' new' : ''}">${esc(name)}<small>${esc(typeLabel(e))}</small></div>${hideBtn(name)}`;
   const changed = base && !eq(base, e) ? ' chg' : '';
   if(isSeq(e)){
     if(e.v.length && e.v.every(r => isSeq(r)) && e.v.every(r => r.v.length <= 40)){
@@ -1248,9 +1257,10 @@ function varHtml(name, e, base, ptrs, labels){
 }
 
 function stateHtml(vars, baseVars, opts = {}){
-  const ptrs = showPtrs ? pointerMap(vars) : [];
+  const full = k => (opts.prefix || '') + k;
+  const entries = Object.entries(vars).filter(([k]) => !hiddenVars.has(full(k)));
+  const ptrs = pointerMap(Object.fromEntries(entries));
   const ptrNames = new Set(ptrs.map(p => p[0]));
-  const entries = Object.entries(vars);
   // linked lists: a list fully contained in another one becomes a label on that list's node
   const treeIds = n => !n || n.more ? [] : [n.id, ...treeIds(n.l), ...treeIds(n.r)];
   const chains = entries.filter(([, v]) => (v.t === 'chain' && v.ids.length) || (v.t === 'tree' && v.root && !v.root.more)).map(([k, v]) => [k, v.t === 'tree' ? { ids: treeIds(v.root) } : v]);
@@ -1269,9 +1279,9 @@ function stateHtml(vars, baseVars, opts = {}){
       let cls = 'sc';
       if(ptrNames.has(k)) cls += ' ptr';
       if(baseVars){ if(b === undefined) cls += ' new'; else if(!eq(b, v)) cls += ' chg'; }
-      sc += `<span class="${cls}"><span class="nm">${esc((opts.prefix || '') + k)}</span><span class="vl">${esc(short(pr(v), 90))}</span></span>`;
+      sc += `<span class="${cls}"><span class="nm">${esc(full(k))}</span><span class="vl">${esc(short(pr(v), 90))}</span>${hideBtn(full(k))}</span>`;
     }else if(!hidden.has(k)){
-      big += varHtml((opts.prefix || '') + k, v, baseVars ? b : null, ptrs, { byId, self: k });
+      big += varHtml(full(k), v, baseVars ? b : null, ptrs, { byId, self: k });
     }
   }
   return (sc ? `<div class="scalars">${sc}</div>` : '') + big;
@@ -1308,7 +1318,9 @@ function show(i){
     h += `<div class="sec-title">Call stack</div><div class="stackl">${s.stack.map(([fn, ln], k) => `${k ? '<span class="sep">›</span>' : ''}<span class="frame${k === s.stack.length - 1 ? ' top' : ''}">${esc(fn)}<span class="idx"> :${ln}</span></span>`).join('')}</div>`;
   }
   const vs = stateHtml(s.vars, s.base ? s.base.vars : null);
-  h += `<div class="sec-title">${s.stack.length ? `Variables in ${esc(s.fn === '<module>' ? 'the script' : s.fn + '()')}` : 'Variables'}</div>` + (vs || '<span class="emptyv">No variables yet.</span>');
+  h += `<div class="sec-title">${s.stack.length ? `Variables in ${esc(s.fn === '<module>' ? 'the script' : s.fn + '()')}` : 'Variables'}</div>`;
+  if(hiddenVars.size) h += `<div class="hiddenbar">Hidden:${[...hiddenVars].map(n => `<button type="button" data-unhide="${esc(n)}" title="Show ${esc(n)} again">${esc(n)} <span aria-hidden="true">+</span></button>`).join('')}${hiddenVars.size > 1 ? '<button type="button" data-unhide="">Show all</button>' : ''}</div>`;
+  h += vs || `<span class="emptyv">${hiddenVars.size ? 'No visible variables.' : 'No variables yet.'}</span>`;
   if(s.out) h += `<div class="sec-title">Printed output</div><pre class="out">${esc(s.out)}</pre>`;
   $('#state').innerHTML = h;
   paintCode(true);
@@ -1541,7 +1553,7 @@ function togglePlay(){
 }
 
 /* ---------- wiring ---------- */
-$('#problemSel').addEventListener('change', e => { prob = ALL.find(p => p.id === e.target.value); store.set('as.problem', prob.id); renderProblem(); run(); });
+$('#problemSel').addEventListener('change', e => { prob = ALL.find(p => p.id === e.target.value); store.set('as.problem', prob.id); hiddenVars = loadHidden(); renderProblem(); run(); });
 $('#tabs').addEventListener('click', e => {
   const b = e.target.closest('.tab'); if(!b) return;
   sol = prob.solutions.find(x => x.id === b.dataset.id); store.set(`as.sol.${prob.id}`, sol.id);
@@ -1593,13 +1605,18 @@ $('#scrub').addEventListener('input', e => { stopPlay(); show(+e.target.value); 
 $('#speed').value = String(speed);
 if(!$('#speed').value){ $('#speed').value = '1'; speed = 1; }
 $('#speed').addEventListener('change', e => { speed = Number(e.target.value) || 1; store.set('as.speed', String(speed)); });
-$('#showPtrs').checked = showPtrs;
-$('#ptrLegend').hidden = !showPtrs;
-$('#showPtrs').addEventListener('change', e => {
-  showPtrs = e.target.checked;
-  store.set('as.pointers', showPtrs ? '1' : '0');
-  $('#ptrLegend').hidden = !showPtrs;
+// hide / unhide variables (− on a variable, names in the Hidden row)
+$('#state').addEventListener('click', e => {
+  const b = e.target.closest('button[data-hide], button[data-unhide]');
+  if(!b) return;
+  const name = b.dataset.hide ?? b.dataset.unhide;
+  if(b.dataset.hide !== undefined) hiddenVars.add(name);
+  else if(name === '') hiddenVars.clear();
+  else hiddenVars.delete(name);
+  saveHidden();
   show(cur);
+  const sel = b.dataset.hide !== undefined ? `[data-unhide="${CSS.escape(name)}"]` : `[data-hide="${CSS.escape(name)}"]`;
+  ($('#state ' + sel) || $('#state .hiddenbar button') || $('#next')).focus();
 });
 codeEl.addEventListener('input', () => { store.set(codeKey(), codeEl.value); markStale(); paintCode(false); refreshEntry(); });
 codeEl.addEventListener('scroll', () => { hlEl.scrollTop = codeEl.scrollTop; hlEl.scrollLeft = codeEl.scrollLeft; });
