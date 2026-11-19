@@ -183,6 +183,8 @@ select.btn{padding-right:8px;max-width:300px}
 .tf{font-weight:600}.tf.t{color:var(--good)}.tf.f{color:var(--bad)}
 
 .state{padding:14px 18px 18px;display:grid;gap:14px}
+.group{display:grid;gap:6px}
+.sub-title{font:500 12px/1 var(--sans);color:var(--muted)}
 .sec-title{font:600 12px/1 var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 -4px}
 .scalars{display:flex;flex-wrap:wrap;gap:8px}
 .sc,.var{position:relative}
@@ -190,7 +192,10 @@ select.btn{padding-right:8px;max-width:300px}
 .var>.hide{top:0;right:0}
 .sc:hover>.hide,.var:hover>.hide,.hide:focus-visible{opacity:1}
 .hide:hover{color:var(--ink);border-color:var(--muted)}
-@media (hover:none){ .hide{opacity:1} }
+@media (hover:none){ .hide,.ptrt{opacity:1} }
+.ptrt{position:absolute;top:-7px;left:-7px;width:18px;height:18px;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);font:600 11px/1 var(--mono);cursor:pointer;opacity:0;transition:opacity .12s}
+.ptrt[aria-pressed="true"]{color:var(--ptr);border-color:var(--ptr);background:var(--ptr-bg)}
+.sc:hover>.ptrt,.ptrt:focus-visible{opacity:1}
 .hiddenbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
 .hiddenbar button{border:1px dashed var(--line);background:transparent;border-radius:999px;padding:2px 9px;font:12.5px/1.4 var(--mono);color:var(--muted);cursor:pointer}
 .hiddenbar button:hover{color:var(--ink);border-color:var(--muted)}
@@ -455,6 +460,112 @@ def _conds(src):
             out[node.lineno] = (compile(ast.Expression(node.test), '<cond>', 'eval'), ' '.join(seg.split()))
     return out
 
+def _pointers(src):
+    """Which int variables index which sequence, read from the code:
+    {seq: [[row vars], [column vars]]}. A variable counts when it is used
+    as an index (nums[i], s[l:r], grid[r][c]), compared with or derived
+    from len(seq), loops over range(len(seq)) or enumerate(seq), or is
+    computed from another index variable (j = i + 1, mid = (l + r) // 2)."""
+    try: tree = ast.parse(src)
+    except SyntaxError: return {}
+    parent, into = {}, set()
+    def find(x):
+        while parent.setdefault(x, x) != x: x = parent[x]
+        return x
+    def union(a, b): parent[find(a)] = find(b)
+    def seq(n):  # nums, self.nums
+        if isinstance(n, ast.Name): return n.id
+        if isinstance(n, ast.Attribute):
+            b = seq(n.value)
+            return b and b + '.' + n.attr
+        return None
+    def length(n):  # len(nums) -> (nums, 0), len(grid[0]) -> (grid, 1)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == 'len' and len(n.args) == 1:
+            a, dim = n.args[0], 0
+            if isinstance(a, ast.Subscript) and not isinstance(a.slice, ast.Slice): a, dim = a.value, 1
+            s = seq(a)
+            if s: return (s, dim)
+        return None
+    def idx(e):  # an index-like expression -> (names, lengths), or None
+        if isinstance(e, ast.Name): return [e.id], []
+        if isinstance(e, ast.Constant) and type(e.value) is int: return [], []
+        if isinstance(e, ast.UnaryOp) and isinstance(e.op, ast.USub) and isinstance(e.operand, ast.Constant): return [], []
+        ln = length(e)
+        if ln: return [], [ln]
+        if isinstance(e, ast.BinOp):
+            const = lambda n: isinstance(n, ast.Constant) and type(n.value) is int
+            if isinstance(e.op, (ast.Add, ast.Sub)) and const(e.right): return idx(e.left)
+            if isinstance(e.op, ast.Add) and const(e.left): return idx(e.right)
+            parts = None
+            if isinstance(e.op, (ast.FloorDiv, ast.RShift)) and const(e.right) and isinstance(e.left, ast.BinOp) and isinstance(e.left.op, ast.Add):
+                parts = [e.left.left, e.left.right]  # (l + r) // 2
+            elif isinstance(e.op, ast.Add) and isinstance(e.right, ast.BinOp) and isinstance(e.right.op, (ast.FloorDiv, ast.RShift)) \
+                    and isinstance(e.right.left, ast.BinOp) and isinstance(e.right.left.op, ast.Sub):
+                parts = [e.left, e.right.left.left, e.right.left.right]  # l + (r - l) // 2
+            if parts:
+                rs = [idx(p) for p in parts]
+                if all(rs): return [n for r in rs for n in r[0]], [l for r in rs for l in r[1]]
+        return None
+    def link(name, e):
+        r = idx(e)
+        if not r: return
+        for n in r[0]: union(name, n)
+        for s, d in r[1]: into.add((name, s, d))
+    def assign(t, v):
+        if isinstance(t, ast.Name): link(t.id, v)
+        elif isinstance(t, ast.Tuple) and isinstance(v, ast.Tuple) and len(t.elts) == len(v.elts):
+            for a, b in zip(t.elts, v.elts): assign(a, b)
+    defs, notes = {}, set()  # notes: type annotations such as List[int]
+    for n in ast.walk(tree):
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            defs[n.name] = [a.arg for a in n.args.posonlyargs + n.args.args]
+            notes.update(id(x) for a in ast.walk(n.args) if isinstance(a, ast.arg) and a.annotation for x in ast.walk(a.annotation))
+            if n.returns: notes.update(id(x) for x in ast.walk(n.returns))
+        elif isinstance(n, ast.AnnAssign):
+            notes.update(id(x) for x in ast.walk(n.annotation))
+    for n in ast.walk(tree):
+        if id(n) in notes: continue
+        if isinstance(n, ast.Subscript):
+            base, ixs = n, []
+            while isinstance(base, ast.Subscript): ixs.insert(0, base.slice); base = base.value
+            s = seq(base)
+            if not s: continue
+            for d, sl in enumerate(ixs[:2]):
+                for e in ([sl.lower, sl.upper] if isinstance(sl, ast.Slice) else [sl]):
+                    r = e is not None and idx(e)
+                    if r:
+                        for name in r[0]: into.add((name, s, d))
+        elif isinstance(n, ast.Assign):
+            for t in n.targets: assign(t, n.value)
+        elif isinstance(n, (ast.AnnAssign, ast.NamedExpr)) and n.value is not None:
+            assign(n.target, n.value)
+        elif isinstance(n, (ast.For, ast.comprehension)) and isinstance(n.iter, ast.Call) and isinstance(n.iter.func, ast.Name):
+            f, args = n.iter.func.id, n.iter.args
+            if f == 'range' and isinstance(n.target, ast.Name):
+                for a in args[:2]: link(n.target.id, a)
+            elif f == 'enumerate' and args and isinstance(n.target, ast.Tuple) and isinstance(n.target.elts[0], ast.Name):
+                s = seq(args[0])
+                if s: into.add((n.target.elts[0].id, s, 0))
+        elif isinstance(n, ast.Compare) and all(isinstance(o, (ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Eq, ast.NotEq)) for o in n.ops):
+            sides = [n.left] + n.comparators
+            for a in sides:
+                if isinstance(a, ast.Name):
+                    for b in sides:
+                        if b is not a: link(a.id, b)  # while l < r, i < len(s)
+        elif isinstance(n, ast.Call):
+            fn = n.func.id if isinstance(n.func, ast.Name) else n.func.attr if isinstance(n.func, ast.Attribute) else None
+            params = defs.get(fn)
+            if params:
+                if isinstance(n.func, ast.Attribute) and params[:1] == ['self']: params = params[1:]
+                for p, a in zip(params, n.args): link(p, a)
+    groups = collections.defaultdict(set)
+    for name, s, d in into: groups[find(name)].add((s, d))
+    out = {}
+    for name in set(parent) | {x[0] for x in into}:
+        for s, d in groups.get(find(name), ()):
+            out.setdefault(s, [[], []])[d].append(name)
+    return {s: [sorted(a), sorted(b)] for s, (a, b) in out.items()}
+
 class _Stop(BaseException): pass
 
 def _plain(v, ann=''):
@@ -627,7 +738,7 @@ def run(code, entry, max_steps):
                     s['expErr'] = ''.join(traceback.format_exception_only(type(e), e)).strip()
         steps.append(s)
     last = steps[-1]
-    return json.dumps({'status': status, 'steps': steps, 'pass': last.get('pass'), 'ret': last.get('ret')})
+    return json.dumps({'status': status, 'steps': steps, 'pass': last.get('pass'), 'ret': last.get('ret'), 'ptrs': _pointers(code)})
 </script>
 
 <script type="module">
@@ -970,6 +1081,10 @@ let prob = ALL.find(p => p.id === store.get('as.problem')) || FREE;
 const loadHidden = () => { try{ return new Set(JSON.parse(store.get('as.hidden.' + prob.id)) || []); }catch{ return new Set(); } };
 const saveHidden = () => hiddenVars.size ? store.set('as.hidden.' + prob.id, JSON.stringify([...hiddenVars])) : store.del('as.hidden.' + prob.id);
 let hiddenVars = loadHidden();
+// pointer / normal variable chosen by hand, overriding what the code analysis found: { k: false, x: true }
+const loadPtrSet = () => { try{ return JSON.parse(store.get('as.ptrs.' + prob.id)) || {}; }catch{ return {}; } };
+const savePtrSet = () => Object.keys(ptrSet).length ? store.set('as.ptrs.' + prob.id, JSON.stringify(ptrSet)) : store.del('as.ptrs.' + prob.id);
+let ptrSet = loadPtrSet();
 let cases = [], caseIdx = 0, traces = [], entry = null, entrySig = '';
 let sol = null;
 
@@ -1029,6 +1144,7 @@ function selectTrace(){
   renderCaseResult();
   if(!t || stale) return;
   steps = t.steps;
+  ptrInfo = t.ptrs || {};
   const nl = steps.filter(s => s.ev === 'line').length;
   $('#summary').textContent = t.status === 'limit' ? `stopped at ${MAX_STEPS.toLocaleString('en')} steps` : `${nl.toLocaleString('en')} line${nl === 1 ? '' : 's'} executed`;
   $('#scrub').max = String(steps.length - 1);
@@ -1158,8 +1274,15 @@ function notesFor(s){
 }
 
 /* ---------- rendering the program state ---------- */
-const PTR = /^(i|j|k|l|r|m|lo|hi|low|high|mid|left|right|start|end|idx|index|p|q|p1|p2|slow|fast|ptr|pos|L|R|row|col)$/;
-function pointerMap(vars){ return Object.entries(vars).filter(([k, v]) => v.t === 'int' && typeof v.v === 'number' && PTR.test(k)); }
+// index variables of each sequence, found in the code by the tracer: { nums: [[l, mid, r], []], grid: [[r], [c]] }
+let ptrInfo = {};
+// a variable set to pointer by hand goes under every list it can index (rows for a grid)
+function pointersInto(seq, pv, dim = 0){
+  const found = ptrInfo[seq] || [[], []];
+  const names = found[dim].filter(k => ptrSet[k] !== false);
+  if(dim === 0) for(const k in ptrSet) if(ptrSet[k] && !found[0].includes(k) && !found[1].includes(k)) names.push(k);
+  return names.filter(k => pv[k] && pv[k].t === 'int' && typeof pv[k].v === 'number').map(k => [k, pv[k]]);
+}
 
 function cellsHtml(items, baseItems, ptrs, opts = {}){
   const n = items.length;
@@ -1187,33 +1310,33 @@ function typeLabel(e){
   return `${e.t} · ${e.n}`;
 }
 
+const ptrBtn = (name, on, auto) => `<button class="ptrt" type="button" data-ptr="${esc(name)}" data-auto="${auto ? 1 : 0}" aria-pressed="${on}" aria-label="${esc(name)} is ${on ? 'a pointer' : 'a normal variable'}${name in ptrSet ? ' (set by hand)' : ''}" title="${on ? `Pointer: shown under the lists it indexes. Click to make ${esc(name)} a normal variable` : `Normal variable. Click to show ${esc(name)} as a pointer under the lists`}${name in ptrSet ? ' (set by hand)' : ''}">↑</button>`;
 const hideBtn = name => `<button class="hide" type="button" data-hide="${esc(name)}" aria-label="Hide ${esc(name)}" title="Hide ${esc(name)}">−</button>`;
 
-function varHtml(name, e, base, ptrs, labels){
+function varHtml(name, e, base, pv, labels){
   const isNew = base === undefined;
   const head = `<div class="vname${isNew ? ' new' : ''}">${esc(name)}<small>${esc(typeLabel(e))}</small></div>${hideBtn(name)}`;
   const changed = base && !eq(base, e) ? ' chg' : '';
   if(isSeq(e)){
     if(e.v.length && e.v.every(r => isSeq(r)) && e.v.every(r => r.v.length <= 40)){
       const cols = Math.max(...e.v.map(r => r.v.length));
-      const P = Object.fromEntries(ptrs);
-      const fr = P.r ?? P.row ?? P.i, fc = P.c ?? P.col ?? P.j;
+      const rows = new Set(pointersInto(name, pv, 0).map(p => p[1].v)), colsAt = new Set(pointersInto(name, pv, 1).map(p => p[1].v));
       let h = `<table class="grid"><tr><th></th>${Array.from({ length: cols }, (_, c) => `<th>${c}</th>`).join('')}</tr>`;
       e.v.forEach((r, ri) => {
         h += `<tr><th>${ri}</th>`;
         for(let c = 0; c < cols; c++){
           const x = r.v[c], bx = base && isSeq(base) && base.v[ri] && base.v[ri].v ? base.v[ri].v[c] : undefined;
-          const cls = (fr && fc && fr.v === ri && fc.v === c) ? 'focus' : (base && x !== undefined && !eq(bx, x) ? 'chg' : '');
+          const cls = (rows.has(ri) && colsAt.has(c)) ? 'focus' : (base && x !== undefined && !eq(bx, x) ? 'chg' : '');
           h += `<td class="${cls}">${x === undefined ? '' : esc(short(pr(x), 12))}</td>`;
         }
         h += '</tr>';
       });
       return `<div class="var">${head}<div style="overflow:auto">${h}</table></div></div>`;
     }
-    return `<div class="var">${head}${cellsHtml(e.v, base && isSeq(base) ? base.v : null, ptrs, { more: e.n > e.v.length })}</div>`;
+    return `<div class="var">${head}${cellsHtml(e.v, base && isSeq(base) ? base.v : null, pointersInto(name, pv), { more: e.n > e.v.length })}</div>`;
   }
   if(e.t === 'str'){
-    return `<div class="var">${head}${cellsHtml([...e.v], base && base.t === 'str' ? [...base.v] : null, ptrs, { chars: true })}</div>`;
+    return `<div class="var">${head}${cellsHtml([...e.v], base && base.t === 'str' ? [...base.v] : null, pointersInto(name, pv), { chars: true })}</div>`;
   }
   if(e.t === 'set'){
     const B = base && base.t === 'set' ? new Set(base.v.map(J)) : null;
@@ -1250,7 +1373,7 @@ function varHtml(name, e, base, ptrs, labels){
   }
   if(e.t === 'obj'){
     const bf = base && base.t === 'obj' ? Object.fromEntries(base.v) : null;
-    const inner = stateHtml(Object.fromEntries(e.v), bf, { prefix: name + '.', nested: true });
+    const inner = stateHtml(Object.fromEntries(e.v), bf, { prefix: name + '.', nested: true, pv });
     return `<div class="var">${head}<div class="obj">${inner || '<span class="emptyv">no attributes</span>'}</div></div>`;
   }
   return '';
@@ -1259,8 +1382,9 @@ function varHtml(name, e, base, ptrs, labels){
 function stateHtml(vars, baseVars, opts = {}){
   const full = k => (opts.prefix || '') + k;
   const entries = Object.entries(vars).filter(([k]) => !hiddenVars.has(full(k)));
-  const ptrs = pointerMap(Object.fromEntries(entries));
-  const ptrNames = new Set(ptrs.map(p => p[0]));
+  const pv = opts.pv || Object.fromEntries(entries);
+  const autoPtrs = new Set(Object.entries(ptrInfo).filter(([q]) => pv[q] && (isSeq(pv[q]) || pv[q].t === 'str')).flatMap(([, d]) => d.flat()));
+  const isPtr = k => ptrSet[k] ?? autoPtrs.has(k);
   // linked lists: a list fully contained in another one becomes a label on that list's node
   const treeIds = n => !n || n.more ? [] : [n.id, ...treeIds(n.l), ...treeIds(n.r)];
   const chains = entries.filter(([, v]) => (v.t === 'chain' && v.ids.length) || (v.t === 'tree' && v.root && !v.root.more)).map(([k, v]) => [k, v.t === 'tree' ? { ids: treeIds(v.root) } : v]);
@@ -1270,21 +1394,25 @@ function stateHtml(vars, baseVars, opts = {}){
     const host = chains.some(([k2, v2], j) => k2 !== k && !hidden.has(k2) && v2.ids.includes(v.ids[0]) && (v2.ids.length > v.ids.length || j < idx));
     if(host) hidden.add(k);
   });
-  let sc = '', big = '';
+  let sc = '', pc = '', big = '';
   for(const [k, v] of entries){
     const b = baseVars ? baseVars[k] : undefined;
     const isStrCells = v.t === 'str' && v.n >= 2 && v.n <= 40 && !v.v.includes('\n');
     const small = (v.t === 'tree' && !v.root) || isScalar(v) || (v.t === 'str' && !isStrCells) || (v.t === 'tuple' && v.n <= 3 && v.v.every(isScalar)) || (v.t === 'chain' && !v.ids.length);
     if(small){
       let cls = 'sc';
-      if(ptrNames.has(k)) cls += ' ptr';
+      const ptr = !opts.pv && v.t === 'int' && isPtr(k);
+      if(ptr) cls += ' ptr';
       if(baseVars){ if(b === undefined) cls += ' new'; else if(!eq(b, v)) cls += ' chg'; }
-      sc += `<span class="${cls}"><span class="nm">${esc(full(k))}</span><span class="vl">${esc(short(pr(v), 90))}</span>${hideBtn(full(k))}</span>`;
+      const chip = `<span class="${cls}"><span class="nm">${esc(full(k))}</span><span class="vl">${esc(short(pr(v), 90))}</span>${!opts.pv && v.t === 'int' ? ptrBtn(k, ptr, autoPtrs.has(k)) : ''}${hideBtn(full(k))}</span>`;
+      if(ptr) pc += chip; else sc += chip;
     }else if(!hidden.has(k)){
-      big += varHtml(full(k), v, baseVars ? b : null, ptrs, { byId, self: k });
+      big += varHtml(full(k), v, baseVars ? b : null, pv, { byId, self: k });
     }
   }
-  return (sc ? `<div class="scalars">${sc}</div>` : '') + big;
+  // pointers get their own row, apart from the other variables
+  const row = (label, chips) => chips ? `<div class="group">${pc ? `<div class="sub-title">${label}</div>` : ''}<div class="scalars">${chips}</div></div>` : '';
+  return row('Pointers', pc) + row('Variables', sc) + big;
 }
 
 /* ---------- step display ---------- */
@@ -1553,7 +1681,7 @@ function togglePlay(){
 }
 
 /* ---------- wiring ---------- */
-$('#problemSel').addEventListener('change', e => { prob = ALL.find(p => p.id === e.target.value); store.set('as.problem', prob.id); hiddenVars = loadHidden(); renderProblem(); run(); });
+$('#problemSel').addEventListener('change', e => { prob = ALL.find(p => p.id === e.target.value); store.set('as.problem', prob.id); hiddenVars = loadHidden(); ptrSet = loadPtrSet(); renderProblem(); run(); });
 $('#tabs').addEventListener('click', e => {
   const b = e.target.closest('.tab'); if(!b) return;
   sol = prob.solutions.find(x => x.id === b.dataset.id); store.set(`as.sol.${prob.id}`, sol.id);
@@ -1607,6 +1735,15 @@ if(!$('#speed').value){ $('#speed').value = '1'; speed = 1; }
 $('#speed').addEventListener('change', e => { speed = Number(e.target.value) || 1; store.set('as.speed', String(speed)); });
 // hide / unhide variables (− on a variable, names in the Hidden row)
 $('#state').addEventListener('click', e => {
+  const t = e.target.closest('button[data-ptr]');
+  if(t){
+    const name = t.dataset.ptr, on = t.getAttribute('aria-pressed') !== 'true';
+    if(on === (t.dataset.auto === '1')) delete ptrSet[name]; else ptrSet[name] = on;
+    savePtrSet();
+    show(cur);
+    $(`#state [data-ptr="${CSS.escape(name)}"]`)?.focus();
+    return;
+  }
   const b = e.target.closest('button[data-hide], button[data-unhide]');
   if(!b) return;
   const name = b.dataset.hide ?? b.dataset.unhide;
