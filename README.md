@@ -15,7 +15,7 @@ AlgoStep runs real Python 3.12 ([Pyodide](https://pyodide.org), compiled to WebA
 - **LeetCode input syntax:** values accept `null`, `true` and `false`. A list becomes a `ListNode` chain or a `TreeNode` tree (level order) when the parameter is annotated that way, and results compare against the same list form. Pasting `nums = [1,2,3], k = 2` into a field fills every field; pasting several lines, one per parameter, creates several cases.
 - **Trees:** binary trees are drawn as trees, with the variables that point into them shown under their nodes.
 - **Your own code:** edit any solution. `print` output is captured. Code and test cases are saved in the browser.
-- **Playback:** Play, Previous / Next, a scrubber, keyboard arrows, Home / End and adjustable speed.
+- **Playback:** Play, Previous / Next, a scrubber, keyboard arrows, Home / End and adjustable speed. Untick *Pointers* to hide the index variables under list cells.
 
 ## Usage
 

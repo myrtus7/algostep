@@ -232,8 +232,11 @@ select.btn{padding-right:8px;max-width:300px}
 .out{margin:0;background:var(--soft);border:1px solid var(--line-soft);border-radius:8px;padding:10px 12px;font:12.5px/1.5 var(--mono);white-space:pre-wrap;max-height:180px;overflow:auto}
 .result{border:1px solid var(--good);background:var(--good-bg);border-radius:8px;padding:10px 14px;font:600 15px/1.4 var(--mono)}
 .result.bad{border-color:var(--bad);background:var(--bad-bg);color:var(--bad);font-weight:500;font-size:13px;white-space:pre-wrap}
+.opt{display:inline-flex;align-items:center;gap:5px;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.opt input{margin:0;accent-color:var(--ptr)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted);padding:0 18px 14px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
+.legend span[hidden]{display:none}
 .legend i{width:13px;height:13px;border-radius:3px;border:1px solid}
 .legend .l1 i{background:var(--chg-bg);border-color:var(--chg)}
 .legend .l2 i{background:var(--good-bg);border-color:var(--good)}
@@ -307,6 +310,7 @@ select.btn{padding-right:8px;max-width:300px}
           <option value="0.45">Fast</option>
           <option value="0.15">Very fast</option>
         </select>
+        <label class="opt" title="Show index variables (i, j, l, r, mid…) under list cells"><input type="checkbox" id="showPtrs"> Pointers</label>
         <span class="of" id="stepOf"></span>
       </div>
       <div class="scrub" id="scrubRow" hidden><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"></div>
@@ -319,7 +323,7 @@ select.btn{padding-right:8px;max-width:300px}
           <ul class="notes" id="stNotes"></ul>
         </div>
         <div class="state" id="state"></div>
-        <div class="legend"><span class="l4"><i></i>Line that just ran</span><span class="l5"><i></i>Next line</span><span class="l1"><i></i>Changed by the last line</span><span class="l2"><i></i>Added</span><span class="l3"><i></i>Index pointer</span></div>
+        <div class="legend"><span class="l4"><i></i>Line that just ran</span><span class="l5"><i></i>Next line</span><span class="l1"><i></i>Changed by the last line</span><span class="l2"><i></i>Added</span><span class="l3" id="ptrLegend"><i></i>Index pointer</span></div>
       </div>
     </div>
   </section>
@@ -957,6 +961,7 @@ const ALL = [FREE, ...PROBLEMS];
 let py = null, pyRun = null, busy = false;
 let steps = [], cur = 0, runLines = [], stale = false, playTimer = null;
 let speed = Number(store.get('as.speed')) || 1;
+let showPtrs = store.get('as.pointers') !== '0';
 let prob = ALL.find(p => p.id === store.get('as.problem')) || FREE;
 let cases = [], caseIdx = 0, traces = [], entry = null, entrySig = '';
 let sol = null;
@@ -1243,7 +1248,7 @@ function varHtml(name, e, base, ptrs, labels){
 }
 
 function stateHtml(vars, baseVars, opts = {}){
-  const ptrs = pointerMap(vars);
+  const ptrs = showPtrs ? pointerMap(vars) : [];
   const ptrNames = new Set(ptrs.map(p => p[0]));
   const entries = Object.entries(vars);
   // linked lists: a list fully contained in another one becomes a label on that list's node
@@ -1588,6 +1593,14 @@ $('#scrub').addEventListener('input', e => { stopPlay(); show(+e.target.value); 
 $('#speed').value = String(speed);
 if(!$('#speed').value){ $('#speed').value = '1'; speed = 1; }
 $('#speed').addEventListener('change', e => { speed = Number(e.target.value) || 1; store.set('as.speed', String(speed)); });
+$('#showPtrs').checked = showPtrs;
+$('#ptrLegend').hidden = !showPtrs;
+$('#showPtrs').addEventListener('change', e => {
+  showPtrs = e.target.checked;
+  store.set('as.pointers', showPtrs ? '1' : '0');
+  $('#ptrLegend').hidden = !showPtrs;
+  show(cur);
+});
 codeEl.addEventListener('input', () => { store.set(codeKey(), codeEl.value); markStale(); paintCode(false); refreshEntry(); });
 codeEl.addEventListener('scroll', () => { hlEl.scrollTop = codeEl.scrollTop; hlEl.scrollLeft = codeEl.scrollLeft; });
 for(const el of [codeEl]){
